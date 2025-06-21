@@ -1,10 +1,11 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Book, File, Edit, Trash2, ChevronDown } from 'lucide-react-native';
+import { Plus, Book, File, Edit, Trash2, ChevronDown, CheckCircle, UploadCloud, XCircle } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { mockCourses, Course, Module, Lesson } from '@/src/data/mockData';
+import * as DocumentPicker from 'expo-document-picker';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -21,13 +22,54 @@ export default function AdminCourseDetailsScreen() {
     const [_, setForceUpdate] = useState(0); // Helper to force re-renders on mutation
     const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
 
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedTitle, setEditedTitle] = useState(course?.title || '');
+    const [editedDescription, setEditedDescription] = useState(course?.description || '');
+    const [editedCertUrl, setEditedCertUrl] = useState(course?.certificateUrl || '');
+    const [editedCertName, setEditedCertName] = useState('');
+
     // This effect is less critical now but can be used for debugging or re-finding if ID changes
     useEffect(() => {
         const foundCourse = mockCourses.find(c => c.id === courseId);
         setCourse(foundCourse);
+        if (foundCourse) {
+            setEditedTitle(foundCourse.title);
+            setEditedDescription(foundCourse.description);
+            setEditedCertUrl(foundCourse.certificateUrl || '');
+            setEditedCertName(foundCourse.certificateUrl?.split('/').pop() || '');
+        }
     }, [courseId]);
 
     const forceUpdate = () => setForceUpdate(f => f + 1);
+
+    const handlePickDocument = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
+            if (!result.canceled) {
+                setEditedCertUrl(result.assets[0].uri);
+                setEditedCertName(result.assets[0].name);
+            }
+        } catch (err) {
+            console.warn(err);
+        }
+    };
+
+    const handleSaveChanges = () => {
+        if (course) {
+            const courseIndex = mockCourses.findIndex(c => c.id === course.id);
+            if (courseIndex !== -1) {
+                mockCourses[courseIndex] = {
+                    ...mockCourses[courseIndex],
+                    title: editedTitle,
+                    description: editedDescription,
+                    certificateUrl: editedCertUrl,
+                };
+            }
+            setCourse(mockCourses[courseIndex]);
+            forceUpdate();
+        }
+        setIsEditing(false);
+    };
 
     const toggleModule = (moduleId: string) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -140,8 +182,55 @@ export default function AdminCourseDetailsScreen() {
         <SafeAreaView style={styles.container}>
             <ScrollView>
                 <View style={styles.courseHeader}>
-                    <Text style={styles.courseTitle}>{course.title}</Text>
-                    <Text style={styles.courseDescription}>{course.description}</Text>
+                    {isEditing ? (
+                        <>
+                            <Text style={styles.editTitle}>Редактировать курс</Text>
+                            <TextInput style={styles.input} value={editedTitle} onChangeText={setEditedTitle} placeholder="Название курса" />
+                            <TextInput style={[styles.input, styles.textArea]} value={editedDescription} onChangeText={setEditedDescription} placeholder="Описание курса" multiline />
+
+                            <Text style={styles.label}>Сертификат</Text>
+                            {editedCertUrl ? (
+                                <View style={styles.fileInfoContainer}>
+                                    <File color={theme.colors.primary} size={24} />
+                                    <Text style={styles.fileName} numberOfLines={1}>{editedCertName}</Text>
+                                    <TouchableOpacity onPress={() => { setEditedCertUrl(''); setEditedCertName(''); }}>
+                                        <XCircle color={theme.colors.danger} size={24} />
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                <TouchableOpacity style={styles.uploadButton} onPress={handlePickDocument}>
+                                    <UploadCloud color={theme.colors.primary} size={24} />
+                                    <Text style={styles.uploadButtonText}>Загрузить PDF</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+                                <CheckCircle color={theme.colors.lightText} size={18} />
+                                <Text style={styles.saveButtonText}>Сохранить</Text>
+                            </TouchableOpacity>
+                        </>
+                    ) : (
+                        <>
+                            <View style={styles.headerRow}>
+                                <Text style={styles.courseTitle}>{course.title}</Text>
+                                <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.iconButton}>
+                                    <Edit color={theme.colors.primary} size={22} />
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={styles.courseDescription}>{course.description}</Text>
+                            {course.certificateUrl ? (
+                                <View style={styles.certContainer}>
+                                    <File color={theme.colors.primary} size={16} />
+                                    <Text style={styles.certText} numberOfLines={1}>{course.certificateUrl.split('/').pop()}</Text>
+                                </View>
+                            ) : (
+                                <View style={styles.certContainer}>
+                                    <File color={theme.colors.subtext} size={16} />
+                                    <Text style={[styles.certText, { color: theme.colors.subtext }]}>Сертификат не добавлен</Text>
+                                </View>
+                            )}
+                        </>
+                    )}
                 </View>
 
                 <View style={styles.modulesSection}>
@@ -177,12 +266,76 @@ const getStyles = (theme: any) => StyleSheet.create({
         fontSize: 24,
         fontFamily: 'Inter-Bold',
         color: theme.colors.text,
+        flex: 1,
     },
     courseDescription: {
         fontSize: 16,
         fontFamily: 'Inter-Regular',
         color: theme.colors.subtext,
         marginTop: 10,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    certContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 15,
+        backgroundColor: `${theme.colors.primary}10`,
+        padding: 10,
+        borderRadius: 8,
+    },
+    certText: {
+        marginLeft: 10,
+        color: theme.colors.primary,
+        fontFamily: 'Inter-Regular',
+        fontSize: 14,
+        flex: 1,
+    },
+    editTitle: {
+        fontSize: 18,
+        fontFamily: 'Inter-Bold',
+        color: theme.colors.text,
+        marginBottom: 15,
+    },
+    label: {
+        fontSize: 16,
+        fontFamily: 'Inter-SemiBold',
+        color: theme.colors.text,
+        marginBottom: 10,
+        marginTop: 5,
+    },
+    input: {
+        backgroundColor: theme.colors.background,
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 15,
+        fontSize: 16,
+        fontFamily: 'Inter-Regular',
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        color: theme.colors.text
+    },
+    textArea: {
+        height: 100,
+        textAlignVertical: 'top',
+    },
+    saveButton: {
+        backgroundColor: theme.colors.success,
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    saveButtonText: {
+        color: theme.colors.lightText,
+        fontSize: 16,
+        fontFamily: 'Inter-Bold',
+        marginLeft: 10,
     },
     modulesSection: {
         padding: 20,
@@ -264,5 +417,38 @@ const getStyles = (theme: any) => StyleSheet.create({
         fontSize: 16,
         fontFamily: 'Inter-Bold',
         marginLeft: 10,
+    },
+    uploadButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: `${theme.colors.primary}20`,
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: theme.colors.primary,
+        borderStyle: 'dashed',
+    },
+    uploadButtonText: {
+        color: theme.colors.primary,
+        fontSize: 16,
+        fontFamily: 'Inter-SemiBold',
+        marginLeft: 10,
+    },
+    fileInfoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: `${theme.colors.primary}20`,
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 20,
+    },
+    fileName: {
+        flex: 1,
+        marginLeft: 10,
+        fontSize: 16,
+        fontFamily: 'Inter-Regular',
+        color: theme.colors.text,
     },
 }); 

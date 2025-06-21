@@ -27,7 +27,7 @@ export interface Course {
     title: string;
     description: string;
     modules: Module[];
-    certificateName?: string;
+    certificateUrl?: string;
 }
 
 export const mockCourses: Course[] = [
@@ -94,6 +94,7 @@ export const mockCourses: Course[] = [
                 ],
             },
         ],
+        certificateUrl: 'https://example.com/certificates/anticorruption-basics.pdf',
     },
     {
         id: '2',
@@ -114,6 +115,7 @@ export const mockCourses: Course[] = [
                 ],
             },
         ],
+        certificateUrl: 'https://example.com/certificates/advanced-investigation.pdf',
     },
 ];
 
@@ -431,5 +433,33 @@ export const mockHomeEvents: HomeEvent[] = [
         location: 'Онлайн',
         participants: 88,
         maxParticipants: 100,
+    },
+];
+
+export interface UserCertificate {
+    id: string;
+    userId: string;
+    courseId: string;
+    courseTitle: string;
+    certificateUrl: string;
+    issueDate: string; // ISO 8601 format
+}
+
+export const mockUserCertificates: UserCertificate[] = [
+    {
+        id: 'cert-1',
+        userId: '2', // Дмитрий Сидоров
+        courseId: '1', // Основы антикоррупционного права
+        courseTitle: 'Основы антикоррупционного права',
+        certificateUrl: 'https://example.com/certificates/anticorruption-basics.pdf',
+        issueDate: '2023-08-15T10:00:00Z',
+    },
+    {
+        id: 'cert-2',
+        userId: '2', // Дмитрий Сидоров
+        courseId: '2', // Продвинутые техники расследования
+        courseTitle: 'Продвинутые техники расследования',
+        certificateUrl: 'https://example.com/certificates/advanced-investigation.pdf',
+        issueDate: '2024-01-20T12:00:00Z',
     },
 ]; 

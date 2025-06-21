@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LogOut, ChevronRight, User, Award, Shield, Bell, Palette, Lock, HelpCircle, Star, X, Ticket, TrendingUp, Target, Calendar, CheckCircle, Flag, Lightbulb, FileText, GraduationCap } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { AppEvent, mockEvents, mockUserRegistrations, UserEventRegistration, mockUsers, User as UserType } from '@/src/data/mockData';
+import { AppEvent, mockEvents, mockUserRegistrations, UserEventRegistration, mockUsers, User as UserType, mockUserCertificates, UserCertificate } from '@/src/data/mockData';
 import { router } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -41,6 +41,8 @@ export default function ProfileScreen() {
     const event = mockEvents.find(e => e.id === reg.eventId);
     return { event, registration: reg };
   }).filter(item => item.event);
+
+  const userCertificates = mockUserCertificates.filter(cert => cert.userId === CURRENT_USER_ID);
 
   const handleLogout = () => {
     router.replace('/auth');
@@ -139,6 +141,12 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/features/achievements' as any)}>
                 <Award color={theme.colors.subtext} size={22} />
                 <Text style={styles.menuItemText}>Достижения</Text>
+                <ChevronRight color={theme.colors.subtext} size={22} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/features/my-certificates' as any)}>
+                <GraduationCap color={theme.colors.subtext} size={22} />
+                <Text style={styles.menuItemText}>Мои сертификаты</Text>
+                {userCertificates.length > 0 && <View style={styles.badgeContainer}><Text style={styles.badgeText}>{userCertificates.length}</Text></View>}
                 <ChevronRight color={theme.colors.subtext} size={22} />
               </TouchableOpacity>
             </View>
