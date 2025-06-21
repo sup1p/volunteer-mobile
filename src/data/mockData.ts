@@ -252,4 +252,131 @@ export const mockUserRegistrations: UserEventRegistration[] = [
     { registrationId: 'reg-1', userId: '2', eventId: 'evt-1', status: 'registered' },
     { registrationId: 'reg-2', userId: '2', eventId: 'evt-3', status: 'attended' },
     { registrationId: 'reg-3', userId: '3', eventId: 'evt-1', status: 'registered' },
+];
+
+export interface Initiative {
+    id: string;
+    title: string;
+    author: string;
+    description: string;
+    likes: number;
+    date: string; // ISO 8601 format
+    comments: Comment[];
+}
+
+export interface Comment {
+    id: string;
+    author: string;
+    text: string;
+    date: string; // ISO 8601 format
+}
+
+export const mockInitiatives: Initiative[] = [
+    {
+        id: 'init-1',
+        title: 'Улучшить систему отчетности в школах',
+        author: 'Елена Козлова',
+        description: 'Предлагаю сделать отчеты о расходах школ публичными и доступными онлайн для всех родителей.',
+        likes: 152,
+        date: '2024-07-20T10:00:00Z',
+        comments: [
+            { id: 'c-1', author: 'Дмитрий Сидоров', text: 'Отличная идея! Это повысит прозрачность.', date: '2024-07-20T11:00:00Z' },
+            { id: 'c-2', author: 'Андрей Петров', text: 'Полностью поддерживаю. Нужно разработать удобный портал для этого.', date: '2024-07-21T14:20:00Z' },
+        ]
+    },
+    {
+        id: 'init-2',
+        title: 'Создать карту ремонта дорог',
+        author: 'Дмитрий Сидоров',
+        description: 'Интерактивная карта, где каждый сможет отметить яму на дороге, а мы будем добиваться ее ремонта.',
+        likes: 345,
+        date: '2024-07-18T14:30:00Z',
+        comments: []
+    },
+    {
+        id: 'init-3',
+        title: 'Контроль за госзакупками лекарств',
+        author: 'Мария Иванова',
+        description: 'Организовать общественный контроль за ценами и качеством закупаемых государством лекарств.',
+        likes: 89,
+        date: '2024-07-22T09:00:00Z',
+        comments: [
+            { id: 'c-3', author: 'Елена Козлова', text: 'Очень важная инициатива. Готова помочь с анализом данных.', date: '2024-07-22T10:30:00Z' },
+        ]
+    },
+];
+
+export interface Mission {
+    id: string;
+    title: string;
+    points: number;
+    difficulty: 'easy' | 'medium' | 'hard';
+    type: 'daily' | 'weekly' | 'special';
+}
+
+export const mockMissions: Mission[] = [
+    {
+        id: '1',
+        title: 'Поделиться статьей о коррупции',
+        points: 10,
+        difficulty: 'easy',
+        type: 'daily',
+    },
+    {
+        id: '2',
+        title: 'Пройти курс "Основы антикоррупционного права"',
+        points: 50,
+        difficulty: 'medium',
+        type: 'weekly',
+    },
+    {
+        id: '3',
+        title: 'Участвовать в антикоррупционном рейде',
+        points: 100,
+        difficulty: 'hard',
+        type: 'special',
+    },
+    {
+        id: '4',
+        title: 'Пригласить друга в приложение',
+        points: 20,
+        difficulty: 'easy',
+        type: 'daily',
+    },
+];
+
+export interface HomeEvent {
+    id: string;
+    title: string;
+    date: string;
+    location: string;
+    participants: number;
+    maxParticipants: number;
+}
+
+export const mockHomeEvents: HomeEvent[] = [
+    {
+        id: '1',
+        title: 'Лекция: Как выявлять коррупцию',
+        date: '15 мая, 18:00',
+        location: 'Центр волонтёров',
+        participants: 24,
+        maxParticipants: 50,
+    },
+    {
+        id: '2',
+        title: 'Флешмоб против коррупции',
+        date: '20 мая, 12:00',
+        location: 'Центральная площадь',
+        participants: 156,
+        maxParticipants: 200,
+    },
+    {
+        id: '3',
+        title: 'Круглый стол с юристами',
+        date: '25 мая, 16:00',
+        location: 'Онлайн',
+        participants: 88,
+        maxParticipants: 100,
+    },
 ]; 

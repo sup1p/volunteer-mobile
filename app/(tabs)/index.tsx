@@ -19,27 +19,14 @@ import {
   MapPin,
   Star,
   Plus,
+  ThumbsUp,
+  MessageSquare,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { mockInitiatives, Initiative, mockMissions, Mission, mockHomeEvents, HomeEvent } from '@/src/data/mockData';
+import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
-
-interface Mission {
-  id: string;
-  title: string;
-  points: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  type: 'daily' | 'weekly' | 'special';
-}
-
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  participants: number;
-  maxParticipants: number;
-}
 
 export default function HomeScreen() {
   const { theme } = useTheme();
@@ -54,48 +41,32 @@ export default function HomeScreen() {
     completedMissions: 23,
   });
 
-  const [missions] = useState<Mission[]>([
-    {
-      id: '1',
-      title: 'Поделиться статьей о коррупции',
-      points: 10,
-      difficulty: 'easy',
-      type: 'daily',
-    },
-    {
-      id: '2',
-      title: 'Пройти курс "Основы антикоррупционного права"',
-      points: 50,
-      difficulty: 'medium',
-      type: 'weekly',
-    },
-    {
-      id: '3',
-      title: 'Участвовать в антикоррупционном рейде',
-      points: 100,
-      difficulty: 'hard',
-      type: 'special',
-    },
-  ]);
+  const [missions] = useState<Mission[]>(mockMissions.slice(0, 3));
+  const [events] = useState<HomeEvent[]>(mockHomeEvents);
+  const [initiatives, setInitiatives] = useState<Initiative[]>(mockInitiatives);
+  const [likedInitiatives, setLikedInitiatives] = useState<Set<string>>(new Set());
 
-  const [events] = useState<Event[]>([
-    {
-      id: '1',
-      title: 'Лекция: Как выявлять коррупцию',
-      date: '15 мая, 18:00',
-      location: 'Центр волонтёров',
-      participants: 24,
-      maxParticipants: 50,
-    },
-    {
-      id: '2',
-      title: 'Флешмоб против коррупции',
-      date: '20 мая, 12:00',
-      location: 'Центральная площадь',
-      participants: 156,
-      maxParticipants: 200,
-    },
-  ]);
+  const handleLike = (initiativeId: string) => {
+    if (likedInitiatives.has(initiativeId)) {
+      // User has already liked this, maybe implement unliking?
+      // For now, we'll just prevent multiple likes.
+      return;
+    }
+
+    setInitiatives(currentInitiatives =>
+      currentInitiatives.map(initiative =>
+        initiative.id === initiativeId
+          ? { ...initiative, likes: initiative.likes + 1 }
+          : initiative
+      )
+    );
+
+    setLikedInitiatives(currentLiked => {
+      const newLiked = new Set(currentLiked);
+      newLiked.add(initiativeId);
+      return newLiked;
+    });
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -181,7 +152,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Ежедневные миссии</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/features/missions' as any)}>
               <Text style={styles.seeAll}>Все</Text>
             </TouchableOpacity>
           </View>
@@ -212,7 +183,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Ближайшие мероприятия</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/features/events' as any)}>
               <Text style={styles.seeAll}>Все</Text>
             </TouchableOpacity>
           </View>
@@ -244,6 +215,44 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* User Initiatives */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Инициативы пользователей</Text>
+            <TouchableOpacity onPress={() => router.push('/features/all-initiatives' as any)}>
+              <Text style={styles.seeAll}>Все</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.eventScroll}>
+            {initiatives.map(initiative => (
+              <View key={initiative.id} style={styles.initiativeCard}>
+                <Text style={styles.initiativeTitle} numberOfLines={2}>{initiative.title}</Text>
+                <Text style={styles.initiativeAuthor}>Автор: {initiative.author}</Text>
+                <Text style={styles.initiativeDescription} numberOfLines={3}>{initiative.description}</Text>
+                <View style={styles.initiativeFooter}>
+                  <TouchableOpacity
+                    style={styles.initiativeButton}
+                    onPress={() => handleLike(initiative.id)}
+                    disabled={likedInitiatives.has(initiative.id)}
+                  >
+                    <ThumbsUp size={18} color={likedInitiatives.has(initiative.id) ? theme.colors.primary : theme.colors.subtext} />
+                    <Text style={[styles.initiativeButtonText, likedInitiatives.has(initiative.id) && { color: theme.colors.primary }]}>
+                      {initiative.likes}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.initiativeButton}
+                    onPress={() => router.push({ pathname: '/features/initiative-details', params: { id: initiative.id } } as any)}
+                  >
+                    <MessageSquare size={18} color={theme.colors.subtext} />
+                    <Text style={styles.initiativeButtonText}>Обсудить</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -458,20 +467,70 @@ const getStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   eventParticipantsText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
+    marginLeft: 6,
+    fontFamily: 'Inter-SemiBold',
     color: theme.colors.primary,
-    marginLeft: 5,
   },
   registerButton: {
     backgroundColor: theme.colors.primary,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   registerButtonText: {
+    color: '#fff',
+    fontFamily: 'Inter-Bold',
+    fontSize: 12,
+  },
+  initiativeCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    width: width * 0.75,
+    marginRight: 15,
+  },
+  initiativeTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.text,
+    marginBottom: 5,
+  },
+  initiativeAuthor: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.subtext,
+    marginBottom: 10,
+  },
+  initiativeDescription: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.text,
+    lineHeight: 20,
+    marginBottom: 15,
+  },
+  initiativeFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: 15,
+    marginTop: 5,
+  },
+  initiativeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 20,
+  },
+  initiativeButtonText: {
+    marginLeft: 8,
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: theme.colors.lightText,
+    color: theme.colors.subtext,
   },
 });

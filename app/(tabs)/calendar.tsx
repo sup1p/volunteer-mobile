@@ -22,10 +22,12 @@ import {
   ChevronRight,
   X,
   Tag,
+  CalendarDays,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { AppEvent, mockEvents, mockUserRegistrations, UserEventRegistration } from '@/src/data/mockData';
 import { v4 as uuidv4 } from 'uuid';
+import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -139,7 +141,12 @@ export default function CalendarScreen() {
           colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
           style={styles.header}
         >
-          <Text style={styles.headerTitle}>Календарь событий</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>Календарь событий</Text>
+            <TouchableOpacity onPress={() => router.push('/features/full-calendar' as any)}>
+              <CalendarDays color={theme.colors.lightText} size={28} />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.headerSubtitle}>
             Участвуйте в мероприятиях и получайте награды
           </Text>
@@ -337,15 +344,21 @@ const getStyles = (theme: any) => StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 40,
-    paddingBottom: 60,
     paddingHorizontal: 20,
+    paddingTop: 30,
+    paddingBottom: 25,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   headerTitle: {
+    fontSize: 26,
     fontFamily: 'Inter-Bold',
-    fontSize: 28,
     color: '#fff',
     textAlign: 'center',
   },
