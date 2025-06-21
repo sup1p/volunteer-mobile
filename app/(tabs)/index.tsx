@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,9 +22,10 @@ import {
   Plus,
   ThumbsUp,
   MessageSquare,
+  Eye,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { mockInitiatives, Initiative, mockMissions, Mission, mockHomeEvents, HomeEvent } from '@/src/data/mockData';
+import { mockInitiatives, Initiative, mockMissions, Mission, mockHomeEvents, HomeEvent, mockNews, NewsArticle } from '@/src/data/mockData';
 import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
@@ -45,6 +47,7 @@ export default function HomeScreen() {
   const [events] = useState<HomeEvent[]>(mockHomeEvents);
   const [initiatives, setInitiatives] = useState<Initiative[]>(mockInitiatives);
   const [likedInitiatives, setLikedInitiatives] = useState<Set<string>>(new Set());
+  const [news] = useState<NewsArticle[]>(mockNews.slice(0, 2));
 
   const handleLike = (initiativeId: string) => {
     if (likedInitiatives.has(initiativeId)) {
@@ -174,6 +177,39 @@ export default function HomeScreen() {
               </View>
               <View style={styles.missionAction}>
                 <Plus size={20} color={theme.colors.primary} />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* News Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Новости</Text>
+            <TouchableOpacity onPress={() => router.push('/features/all-news' as any)}>
+              <Text style={styles.seeAll}>Все</Text>
+            </TouchableOpacity>
+          </View>
+          {news.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.newsCard}
+              onPress={() => router.push({ pathname: '/features/news-detail', params: { id: item.id } } as any)}
+            >
+              <Image source={{ uri: item.imageUrl }} style={styles.newsImage} />
+              <View style={styles.newsContent}>
+                <Text style={styles.newsTitle}>{item.title}</Text>
+                <View style={styles.newsMetaRow}>
+                  <Text style={styles.newsMetaText}>
+                    <Text style={styles.newsCategory}>{item.category}</Text> • {item.timestamp}
+                  </Text>
+                  <View style={styles.newsStats}>
+                    <Eye size={16} color={theme.colors.subtext} />
+                    <Text style={styles.newsStatsText}>{item.views}</Text>
+                    <MessageSquare size={16} color={theme.colors.subtext} style={{ marginLeft: 8 }} />
+                    <Text style={styles.newsStatsText}>{item.comments}</Text>
+                  </View>
+                </View>
               </View>
             </TouchableOpacity>
           ))}
@@ -414,10 +450,10 @@ const getStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   missionAction: {
-    marginLeft: 10,
+    marginLeft: 'auto',
   },
   eventScroll: {
-    marginHorizontal: -20,
+    marginHorizontal: -16,
     paddingHorizontal: 20,
   },
   eventCard: {
@@ -532,5 +568,55 @@ const getStyles = (theme: any) => StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: theme.colors.subtext,
+  },
+  newsCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.card,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  newsImage: {
+    width: 100,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  newsContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+    height: 80,
+  },
+  newsTitle: {
+    fontSize: 15,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    lineHeight: 20,
+  },
+  newsMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 'auto',
+  },
+  newsMetaText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.subtext,
+  },
+  newsCategory: {
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.danger,
+  },
+  newsStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  newsStatsText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.subtext,
+    marginLeft: 4,
   },
 });
