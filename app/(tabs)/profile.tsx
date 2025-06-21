@@ -130,7 +130,7 @@ export default function ProfileScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Моя активность</Text>
             <View style={styles.menuSection}>
-              <TouchableOpacity style={styles.menuItem} onPress={() => { if (userTickets.length > 0) handleTicketPress(userTickets[0] as any) }}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/features/my-tickets' as any)}>
                 <Ticket color={theme.colors.subtext} size={22} />
                 <Text style={styles.menuItemText}>Мои билеты</Text>
                 {userTickets.length > 0 && <View style={styles.badgeContainer}><Text style={styles.badgeText}>{userTickets.length}</Text></View>}
@@ -188,41 +188,6 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Animated.ScrollView>
-
-      {selectedTicket && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={ticketModalVisible}
-          onRequestClose={() => setTicketModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity style={styles.closeButton} onPress={() => setTicketModalVisible(false)}>
-                <X size={24} color={theme.colors.subtext} />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Билет на событие</Text>
-              <View style={styles.qrContainer}>
-                <QRCode
-                  value={JSON.stringify({
-                    userId: selectedTicket.registration.userId,
-                    eventId: selectedTicket.registration.eventId,
-                    registrationId: selectedTicket.registration.registrationId
-                  })}
-                  size={width * 0.6}
-                  backgroundColor={theme.colors.card}
-                  color={theme.colors.text}
-                />
-              </View>
-              <Text style={styles.ticketEventTitle}>{selectedTicket.event.title}</Text>
-              <Text style={styles.ticketEventDate}>
-                {new Date(selectedTicket.event.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </Text>
-              <Text style={styles.ticketInstruction}>Покажите этот QR-код организатору на входе</Text>
-            </View>
-          </View>
-        </Modal>
-      )}
     </SafeAreaView>
   );
 }
