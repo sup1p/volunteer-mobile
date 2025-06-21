@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Shield, Mail, Lock, User, Eye, EyeOff } from 'lucide-react-native';
@@ -23,6 +24,8 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -74,6 +77,10 @@ export default function AuthScreen() {
   };
 
   const handleAuth = () => {
+    if (!isLogin && password !== confirmPassword) {
+      Alert.alert('Ошибка регистрации', 'Пароли не совпадают.');
+      return;
+    }
     // Здесь будет логика авторизации/регистрации
     router.replace('/(tabs)');
   };
@@ -159,6 +166,30 @@ export default function AuthScreen() {
                   )}
                 </TouchableOpacity>
               </View>
+
+              {!isLogin && (
+                <View style={styles.inputContainer}>
+                  <Lock color="#667eea" size={20} style={styles.inputIcon} />
+                  <TextInput
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Подтвердите пароль"
+                    placeholderTextColor="#999"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff color="#667eea" size={20} />
+                    ) : (
+                      <Eye color="#667eea" size={20} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
 
               <TouchableOpacity
                 style={styles.authButton}
