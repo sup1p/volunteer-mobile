@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,143 +13,54 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Calendar as CalendarIcon,
   Clock,
-  MapPin,
   Users,
   Plus,
   Filter,
   Search,
-  Star,
+  Award,
   ChevronLeft,
   ChevronRight,
   X,
+  Tag,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { AppEvent, mockEvents, mockUserRegistrations, UserEventRegistration } from '@/src/data/mockData';
+import { v4 as uuidv4 } from 'uuid';
 
 const { width } = Dimensions.get('window');
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  participants: number;
-  maxParticipants: number;
-  type: 'lecture' | 'raid' | 'flashmob' | 'training' | 'meeting';
-  points: number;
-  registered: boolean;
-}
+// Моделируем ID текущего пользователя. В реальном приложении это будет браться из стейта авторизации.
+const CURRENT_USER_ID = '2';
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<AppEvent | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [filter, setFilter] = useState<string>('all');
+  const [registrations, setRegistrations] = useState<UserEventRegistration[]>(mockUserRegistrations);
 
-  const [events] = useState<Event[]>([
-    {
-      id: '1',
-      title: 'Лекция: Как выявлять коррупцию',
-      description: 'Подробная лекция о методах выявления коррупционных схем в государственных органах и частном секторе.',
-      date: '2024-05-15',
-      time: '18:00',
-      location: 'Центр волонтёров, ул. Ленина 45',
-      participants: 24,
-      maxParticipants: 50,
-      type: 'lecture',
-      points: 25,
-      registered: false,
-    },
-    {
-      id: '2',
-      title: 'Флешмоб против коррупции',
-      description: 'Мирная акция привлечения внимания к проблемам коррупции в городе.',
-      date: '2024-05-20',
-      time: '12:00',
-      location: 'Центральная площадь',
-      participants: 156,
-      maxParticipants: 200,
-      type: 'flashmob',
-      points: 50,
-      registered: true,
-    },
-    {
-      id: '3',
-      title: 'Антикоррупционный рейд',
-      description: 'Проверка соблюдения антикоррупционного законодательства в муниципальных учреждениях.',
-      date: '2024-05-22',
-      time: '10:00',
-      location: 'Городская администрация',
-      participants: 8,
-      maxParticipants: 15,
-      type: 'raid',
-      points: 100,
-      registered: false,
-    },
-    {
-      id: '4',
-      title: 'Тренинг по медиаграмотности',
-      description: 'Обучение навыкам анализа информации и выявления фейковых новостей.',
-      date: '2024-05-25',
-      time: '14:00',
-      location: 'Библиотека им. Пушкина',
-      participants: 12,
-      maxParticipants: 30,
-      type: 'training',
-      points: 75,
-      registered: false,
-    },
-    {
-      id: '5',
-      title: 'Встреча координаторов',
-      description: 'Ежемесячная встреча координаторов волонтёрских групп для обсуждения планов.',
-      date: '2024-05-28',
-      time: '19:00',
-      location: 'Онлайн (Zoom)',
-      participants: 45,
-      maxParticipants: 100,
-      type: 'meeting',
-      points: 30,
-      registered: true,
-    },
-  ]);
-
-  const getEventTypeColor = (type: string) => {
-    switch (type) {
-      case 'lecture':
-        return '#667eea';
-      case 'raid':
-        return '#ef4444';
-      case 'flashmob':
-        return '#f59e0b';
-      case 'training':
-        return '#10b981';
-      case 'meeting':
-        return '#8b5cf6';
-      default:
-        return '#6b7280';
+  const getEventTypeColor = (category: AppEvent['category']) => {
+    switch (category) {
+      case 'educational': return theme.colors.primary;
+      case 'community': return theme.colors.success;
+      case 'practical': return theme.colors.warning;
+      case 'in-app': return theme.colors.primary;
+      case 'offline-monitoring': return theme.colors.danger;
+      default: return theme.colors.subtext;
     }
   };
 
-  const getEventTypeName = (type: string) => {
-    switch (type) {
-      case 'lecture':
-        return 'Лекция';
-      case 'raid':
-        return 'Рейд';
-      case 'flashmob':
-        return 'Флешмоб';
-      case 'training':
-        return 'Тренинг';
-      case 'meeting':
-        return 'Встреча';
-      default:
-        return 'Событие';
-    }
+  const getEventTypeName = (category: AppEvent['category']) => {
+    const names = {
+      'educational': 'Образование',
+      'community': 'Общество',
+      'practical': 'Практика',
+      'in-app': 'В приложении',
+      'offline-monitoring': 'Мониторинг',
+    };
+    return names[category] || 'Событие';
   };
 
   const formatDate = (dateString: string) => {
@@ -157,26 +68,68 @@ export default function CalendarScreen() {
     return date.toLocaleDateString('ru-RU', {
       day: 'numeric',
       month: 'long',
+      year: 'numeric'
     });
   };
 
-  const handleEventPress = (event: Event) => {
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const handleEventPress = (event: AppEvent) => {
     setSelectedEvent(event);
     setShowEventModal(true);
   };
 
   const handleRegister = (eventId: string) => {
-    // Здесь будет логика регистрации на мероприятие
+    // Проверяем, не зарегистрирован ли пользователь уже
+    const isRegistered = registrations.some(reg => reg.eventId === eventId && reg.userId === CURRENT_USER_ID);
+    if (!isRegistered) {
+      const newRegistration: UserEventRegistration = {
+        registrationId: uuidv4(),
+        userId: CURRENT_USER_ID,
+        eventId: eventId,
+        status: 'registered',
+      };
+      setRegistrations(prev => [...prev, newRegistration]);
+      console.log(`Пользователь ${CURRENT_USER_ID} зарегистрировался на событие ${eventId}`);
+    }
     setShowEventModal(false);
   };
 
-  const filteredEvents = filter === 'all'
-    ? events
-    : events.filter(event => event.type === filter);
+  const upcomingEvents = useMemo(() => {
+    let eventsToShow = mockEvents;
 
-  const upcomingEvents = filteredEvents.filter(event =>
-    new Date(event.date) >= new Date()
-  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (filter === 'attended') {
+      const attendedEventIds = registrations
+        .filter(reg => reg.userId === CURRENT_USER_ID && reg.status === 'attended')
+        .map(reg => reg.eventId);
+      eventsToShow = mockEvents.filter(event => attendedEventIds.includes(event.id));
+    } else if (filter !== 'all') {
+      eventsToShow = mockEvents.filter(event => event.category === filter);
+    }
+
+    // Для всех фильтров, кроме "Посещенные", показываем только будущие события
+    if (filter !== 'attended') {
+      eventsToShow = eventsToShow.filter(event => new Date(event.date) >= new Date());
+    }
+
+    return eventsToShow.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [filter, registrations]);
+
+  const totalPointsAvailable = useMemo(() => {
+    return upcomingEvents.reduce((sum, event) => {
+      if (event.reward.type === 'points') {
+        return sum + (event.reward.value as number);
+      }
+      return sum;
+    }, 0);
+  }, [upcomingEvents]);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -188,7 +141,7 @@ export default function CalendarScreen() {
         >
           <Text style={styles.headerTitle}>Календарь событий</Text>
           <Text style={styles.headerSubtitle}>
-            Участвуйте в мероприятиях и получайте баллы
+            Участвуйте в мероприятиях и получайте награды
           </Text>
         </LinearGradient>
 
@@ -201,12 +154,12 @@ export default function CalendarScreen() {
           </View>
           <View style={styles.statCard}>
             <Users color={theme.colors.success} size={24} />
-            <Text style={styles.statValue}>2</Text>
-            <Text style={styles.statLabel}>Зарегистрирован</Text>
+            <Text style={styles.statValue}>{registrations.filter(r => r.userId === CURRENT_USER_ID && r.status === 'registered').length}</Text>
+            <Text style={styles.statLabel}>Участвую</Text>
           </View>
           <View style={styles.statCard}>
-            <Star color={theme.colors.warning} size={24} />
-            <Text style={styles.statValue}>280</Text>
+            <Award color={theme.colors.warning} size={24} />
+            <Text style={styles.statValue}>{totalPointsAvailable}</Text>
             <Text style={styles.statLabel}>Баллов доступно</Text>
           </View>
         </View>
@@ -216,11 +169,12 @@ export default function CalendarScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {[
               { key: 'all', label: 'Все' },
-              { key: 'lecture', label: 'Лекции' },
-              { key: 'raid', label: 'Рейды' },
-              { key: 'flashmob', label: 'Флешмобы' },
-              { key: 'training', label: 'Тренинги' },
-              { key: 'meeting', label: 'Встречи' },
+              { key: 'educational', label: 'Образование' },
+              { key: 'community', label: 'Общество' },
+              { key: 'practical', label: 'Практика' },
+              { key: 'in-app', label: 'В приложении' },
+              { key: 'offline-monitoring', label: 'Мониторинг' },
+              { key: 'attended', label: 'Посещенные' },
             ].map((filterOption) => (
               <TouchableOpacity
                 key={filterOption.key}
@@ -245,134 +199,131 @@ export default function CalendarScreen() {
 
         {/* Events List */}
         <View style={styles.eventsSection}>
-          <Text style={styles.sectionTitle}>Ближайшие события</Text>
+          <Text style={styles.sectionTitle}>
+            {filter === 'attended' ? 'Посещенные события' : 'Ближайшие события'}
+          </Text>
 
           {upcomingEvents.length > 0 ? (
-            upcomingEvents.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={[styles.eventCard, event.registered && styles.eventCardRegistered]}
-                onPress={() => handleEventPress(event)}
-              >
-                <View style={styles.eventCardHeader}>
-                  <View style={[styles.eventType, { backgroundColor: getEventTypeColor(event.type) }]}>
-                    <Text style={styles.eventType_text}>{getEventTypeName(event.type)}</Text>
-                  </View>
-                  <Text style={styles.eventDate}>{formatDate(event.date)}</Text>
-                </View>
+            upcomingEvents.map((event, index) => {
+              const userRegistration = registrations.find(r => r.userId === CURRENT_USER_ID && r.eventId === event.id);
 
-                <Text style={styles.eventTitle}>{event.title}</Text>
-
-                <View style={styles.eventInfoContainer}>
-                  <View style={styles.eventInfo}>
-                    <Clock color={theme.colors.subtext} size={14} />
-                    <Text style={styles.eventInfoText}>{event.time}</Text>
+              return (
+                <TouchableOpacity key={event.id} style={styles.eventCard} onPress={() => handleEventPress(event)}>
+                  <View style={styles.eventCardHeader}>
+                    <View style={[styles.eventTypeBadge, { backgroundColor: getEventTypeColor(event.category) }]}>
+                      <Tag size={14} color="#fff" />
+                      <Text style={styles.eventTypeBadgeText}>{getEventTypeName(event.category)}</Text>
+                    </View>
+                    <View style={styles.eventReward}>
+                      <Award size={16} color={theme.colors.warning} />
+                      <Text style={styles.eventRewardText}>
+                        {event.reward.type === 'points' ? `${event.reward.value} баллов` : `Бейдж "${event.reward.value}"`}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.eventInfo}>
-                    <MapPin color={theme.colors.subtext} size={14} />
-                    <Text style={styles.eventInfoText}>{event.location}</Text>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
+                  <Text style={styles.eventDescription} numberOfLines={2}>{event.description}</Text>
+                  <View style={styles.eventMeta}>
+                    <View style={styles.metaItem}>
+                      <CalendarIcon size={14} color={theme.colors.subtext} />
+                      <Text style={styles.metaText}>{formatDate(event.date)}</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Clock size={14} color={theme.colors.subtext} />
+                      <Text style={styles.metaText}>{formatTime(event.date)}</Text>
+                    </View>
                   </View>
-                </View>
-
-                <View style={styles.eventFooter}>
-                  <View style={styles.eventParticipants}>
-                    <Users color={theme.colors.subtext} size={16} />
-                    <Text style={styles.eventInfoText}>
-                      {event.participants} / {event.maxParticipants}
-                    </Text>
+                  <View style={styles.eventFooter}>
+                    <View style={styles.participants}>
+                      <Users size={14} color={theme.colors.subtext} />
+                      <Text style={styles.metaText}>{event.participants} участников</Text>
+                    </View>
+                    <ChevronRight size={20} color={theme.colors.primary} />
                   </View>
-                  <View style={styles.eventPoints}>
-                    <Star color={theme.colors.primary} size={16} />
-                    <Text style={styles.eventPointsText}>{event.points} баллов</Text>
-                  </View>
-                </View>
-
-                {event.registered && (
-                  <View style={styles.registeredBadge}>
-                    <Text style={styles.registeredBadgeText}>Вы записаны</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))
+                  {userRegistration && (
+                    <View style={[
+                      styles.registrationBadge,
+                      { backgroundColor: userRegistration.status === 'attended' ? theme.colors.success : theme.colors.primary }
+                    ]}>
+                      <Text style={styles.registrationBadgeText}>
+                        {userRegistration.status === 'attended' ? 'Вы посетили' : 'Вы записаны'}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )
+            })
           ) : (
             <View style={styles.noEventsContainer}>
-              <Text style={styles.noEventsText}>Нет событий по выбранному фильтру.</Text>
+              <Text style={styles.noEventsText}>Нет предстоящих событий по выбранному фильтру.</Text>
             </View>
           )}
         </View>
       </ScrollView>
 
       {/* Event Details Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showEventModal}
-        onRequestClose={() => setShowEventModal(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            {selectedEvent && (
-              <>
-                <View style={styles.modalHeader}>
-                  <View style={[styles.modalEventType, { backgroundColor: getEventTypeColor(selectedEvent.type) }]}>
-                    <Text style={styles.modalEventType_text}>{getEventTypeName(selectedEvent.type)}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.closeButton} onPress={() => setShowEventModal(false)}>
-                    <X color={theme.colors.text} size={24} />
-                  </TouchableOpacity>
+      {selectedEvent && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showEventModal}
+          onRequestClose={() => setShowEventModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.closeButton} onPress={() => setShowEventModal(false)}>
+                <X size={24} color={theme.colors.subtext} />
+              </TouchableOpacity>
+
+              <ScrollView>
+                <View style={[styles.modalEventTypeBadge, { backgroundColor: getEventTypeColor(selectedEvent.category) }]}>
+                  <Text style={styles.modalEventTypeBadgeText}>{getEventTypeName(selectedEvent.category)}</Text>
                 </View>
 
                 <Text style={styles.modalTitle}>{selectedEvent.title}</Text>
 
-                <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
-                  <Text style={styles.modalSectionTitle}>Описание</Text>
-                  <Text style={styles.modalDescription}>{selectedEvent.description}</Text>
-
-                  <View style={styles.modalInfoGrid}>
-                    <View style={styles.modalInfoItem}>
-                      <CalendarIcon color={theme.colors.subtext} size={20} />
-                      <Text style={styles.modalInfoText}>{formatDate(selectedEvent.date)}</Text>
-                    </View>
-                    <View style={styles.modalInfoItem}>
-                      <Clock color={theme.colors.subtext} size={20} />
-                      <Text style={styles.modalInfoText}>{selectedEvent.time}</Text>
-                    </View>
-                    <View style={styles.modalInfoItem}>
-                      <MapPin color={theme.colors.subtext} size={20} />
-                      <Text style={styles.modalInfoText}>{selectedEvent.location}</Text>
-                    </View>
-                    <View style={styles.modalInfoItem}>
-                      <Users color={theme.colors.subtext} size={20} />
-                      <Text style={styles.modalInfoText}>
-                        {selectedEvent.participants} / {selectedEvent.maxParticipants} участников
-                      </Text>
-                    </View>
-                    <View style={styles.modalInfoItem}>
-                      <Star color={theme.colors.subtext} size={20} />
-                      <Text style={styles.modalInfoText}>{selectedEvent.points} баллов за участие</Text>
-                    </View>
+                <View style={styles.modalMetaRow}>
+                  <View style={styles.modalMetaItem}>
+                    <CalendarIcon size={16} color={theme.colors.subtext} />
+                    <Text style={styles.modalMetaText}>{formatDate(selectedEvent.date)}</Text>
                   </View>
-                </ScrollView>
-
-                <View style={styles.modalFooter}>
-                  {selectedEvent.registered ? (
-                    <TouchableOpacity style={styles.alreadyRegisteredButton} disabled>
-                      <Text style={styles.alreadyRegisteredButtonText}>Вы уже записаны</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.registerButton}
-                      onPress={() => handleRegister(selectedEvent.id)}
-                    >
-                      <Text style={styles.registerButtonText}>Записаться на событие</Text>
-                    </TouchableOpacity>
-                  )}
+                  <View style={styles.modalMetaItem}>
+                    <Clock size={16} color={theme.colors.subtext} />
+                    <Text style={styles.modalMetaText}>{formatTime(selectedEvent.date)}</Text>
+                  </View>
                 </View>
-              </>
-            )}
+
+                <View style={styles.modalMetaRow}>
+                  <View style={styles.modalMetaItem}>
+                    <Users size={16} color={theme.colors.subtext} />
+                    <Text style={styles.modalMetaText}>{selectedEvent.participants} участников</Text>
+                  </View>
+                  <View style={styles.modalMetaItem}>
+                    <Award size={16} color={theme.colors.warning} />
+                    <Text style={styles.modalMetaText}>
+                      {selectedEvent.reward.type === 'points' ? `${selectedEvent.reward.value} баллов` : `Бейдж "${selectedEvent.reward.value}"`}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.modalSectionTitle}>Описание</Text>
+                <Text style={styles.modalDescription}>{selectedEvent.description}</Text>
+
+                <TouchableOpacity
+                  style={[styles.registerButton, registrations.some(r => r.eventId === selectedEvent.id && r.userId === CURRENT_USER_ID) && styles.disabledButton]}
+                  onPress={() => handleRegister(selectedEvent.id)}
+                  disabled={registrations.some(r => r.eventId === selectedEvent.id && r.userId === CURRENT_USER_ID)}
+                >
+                  <Text style={styles.registerButtonText}>
+                    {registrations.some(r => r.eventId === selectedEvent.id && r.userId === CURRENT_USER_ID) ? 'Вы уже записаны' : 'Принять участие'}
+                  </Text>
+                </TouchableOpacity>
+
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -386,298 +337,277 @@ const getStyles = (theme: any) => StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
     paddingTop: 40,
     paddingBottom: 60,
+    paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
   headerTitle: {
-    fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: theme.colors.lightText,
+    fontSize: 28,
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: 8,
   },
   headerSubtitle: {
+    fontFamily: 'Inter-Regular',
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.lightText,
-    opacity: 0.9,
+    color: '#fff',
     textAlign: 'center',
+    opacity: 0.9,
+    marginTop: 5,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingHorizontal: 15,
-    marginTop: -40,
-  },
-  statCard: {
     backgroundColor: theme.colors.card,
-    borderRadius: 20,
+    marginHorizontal: 20,
+    borderRadius: 15,
     padding: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: (width - 60) / 3,
-    shadowColor: theme.colors.text,
+    marginTop: -40,
+    elevation: 5,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
-    elevation: 5,
+  },
+  statCard: {
+    alignItems: 'center',
+    flex: 1,
   },
   statValue: {
-    fontSize: 24,
     fontFamily: 'Inter-Bold',
+    fontSize: 20,
     color: theme.colors.text,
-    marginTop: 8,
+    marginTop: 5,
   },
   statLabel: {
-    fontSize: 13,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Inter-Medium',
+    fontSize: 12,
     color: theme.colors.subtext,
-    marginTop: 4,
-    textAlign: 'center',
+    marginTop: 2,
   },
   filterContainer: {
+    marginTop: 20,
     paddingHorizontal: 15,
-    marginTop: 25,
     marginBottom: 10,
   },
   filterButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: theme.colors.inputBackground,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: 20,
-    marginRight: 10,
+    backgroundColor: theme.colors.card,
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   filterButtonActive: {
     backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   filterButtonText: {
-    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
     color: theme.colors.text,
   },
   filterButtonTextActive: {
-    color: theme.colors.lightText,
+    color: '#fff',
   },
   eventsSection: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    marginTop: 10,
   },
   sectionTitle: {
-    fontSize: 22,
     fontFamily: 'Inter-Bold',
+    fontSize: 20,
     color: theme.colors.text,
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+  noEventsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 50,
+    backgroundColor: theme.colors.card,
+    borderRadius: 15,
+  },
+  noEventsText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: theme.colors.subtext,
   },
   eventCard: {
     backgroundColor: theme.colors.card,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: theme.colors.text,
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  eventCardRegistered: {
-    borderColor: theme.colors.success,
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
   eventCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  eventType: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  eventType_text: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.lightText,
-  },
-  eventDate: {
-    fontSize: 13,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.subtext,
-  },
-  eventTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.text,
-    marginBottom: 12,
-    lineHeight: 24,
-  },
-  eventInfoContainer: {
-    marginBottom: 15,
-    gap: 8,
-  },
-  eventInfo: {
+  eventTypeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
-  eventInfoText: {
-    fontSize: 14,
+  eventTypeBadgeText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 12,
+    color: '#fff',
+    marginLeft: 5,
+  },
+  eventReward: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  eventRewardText: {
     fontFamily: 'Inter-Medium',
+    fontSize: 12,
+    color: theme.colors.warning,
+    marginLeft: 5,
+  },
+  eventTitle: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 18,
+    color: theme.colors.text,
+    marginBottom: 5,
+  },
+  eventDescription: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
     color: theme.colors.subtext,
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  eventMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: 10,
+    marginTop: 5,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metaText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 12,
+    color: theme.colors.subtext,
+    marginLeft: 6,
   },
   eventFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    marginTop: 10,
   },
-  eventParticipants: {
+  participants: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  eventPoints: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  eventPointsText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.primary,
-  },
-  registeredBadge: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    backgroundColor: theme.colors.success,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  registeredBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.lightText,
-  },
-  noEventsContainer: {
-    height: 150,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.card,
-    borderRadius: 20,
-  },
-  noEventsText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.subtext,
-  },
-  modalBackdrop: {
+  // Modal Styles
+  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: theme.colors.card,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
     height: '85%',
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 5,
-  },
-  modalEventType: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 18,
-  },
-  modalEventType_text: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.lightText,
-  },
   closeButton: {
-    padding: 8,
-    backgroundColor: theme.colors.inputBackground,
-    borderRadius: 20,
+    alignSelf: 'flex-end',
+    padding: 5,
+  },
+  modalEventTypeBadge: {
+    alignSelf: 'flex-start',
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  modalEventTypeBadgeText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#fff',
   },
   modalTitle: {
-    fontSize: 24,
     fontFamily: 'Inter-Bold',
+    fontSize: 24,
     color: theme.colors.text,
-    marginBottom: 20,
-    paddingHorizontal: 5,
-    lineHeight: 32,
+    marginBottom: 15,
   },
-  modalScrollView: {
-    flex: 1,
+  modalMetaRow: {
+    flexDirection: 'row',
+    marginBottom: 15,
+    alignItems: 'center',
   },
-  modalSectionTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.subtext,
-    marginBottom: 10,
-    paddingHorizontal: 5,
-  },
-  modalDescription: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.text,
-    lineHeight: 24,
-    marginBottom: 25,
-    paddingHorizontal: 5,
-  },
-  modalInfoGrid: {
-    gap: 15,
-    paddingHorizontal: 5,
-  },
-  modalInfoItem: {
+  modalMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    marginRight: 20,
   },
-  modalInfoText: {
-    fontSize: 15,
+  modalMetaText: {
     fontFamily: 'Inter-Medium',
+    fontSize: 14,
     color: theme.colors.text,
-    flex: 1,
+    marginLeft: 8,
   },
-  modalFooter: {
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+  modalSectionTitle: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 18,
+    color: theme.colors.text,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  modalDescription: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: theme.colors.subtext,
+    lineHeight: 24,
+    marginBottom: 20,
   },
   registerButton: {
     backgroundColor: theme.colors.primary,
+    borderRadius: 15,
     paddingVertical: 18,
-    borderRadius: 25,
     alignItems: 'center',
+    marginTop: 'auto',
   },
   registerButtonText: {
-    fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: theme.colors.lightText,
-  },
-  alreadyRegisteredButton: {
-    backgroundColor: theme.colors.border,
-    paddingVertical: 18,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  alreadyRegisteredButtonText: {
     fontSize: 18,
+    color: '#fff',
+  },
+  disabledButton: {
+    backgroundColor: theme.colors.disabled,
+  },
+  registrationBadge: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 7,
+  },
+  registrationBadgeText: {
+    color: '#fff',
     fontFamily: 'Inter-Bold',
-    color: theme.colors.subtext,
+    fontSize: 12,
   },
 });

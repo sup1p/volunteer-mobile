@@ -77,7 +77,7 @@ export default function AdminEventsScreen() {
     );
 
     const renderItem = ({ item }: { item: Event }) => (
-        <TouchableOpacity style={styles.card} onPress={() => router.push({ pathname: '/admin/event-attendees' as any, params: { eventId: item.id } })}>
+        <TouchableOpacity style={styles.card} onPress={() => router.push(`/admin/event/${item.id}` as any)}>
             <View style={styles.cardIconContainer}>
                 <Calendar color={theme.colors.primary} size={30} />
             </View>
