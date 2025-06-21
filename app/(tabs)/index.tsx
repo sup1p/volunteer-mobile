@@ -23,16 +23,19 @@ import {
   ThumbsUp,
   MessageSquare,
   Eye,
+  Check,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { mockInitiatives, Initiative, mockMissions, Mission, mockHomeEvents, HomeEvent, mockNews, NewsArticle } from '@/src/data/mockData';
 import { router } from 'expo-router';
+import { useMissions } from '@/src/context/MissionContext';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
+  const { missions } = useMissions();
 
   const [userData] = useState({
     name: 'Александр Петров',
@@ -43,7 +46,6 @@ export default function HomeScreen() {
     completedMissions: 23,
   });
 
-  const [missions] = useState<Mission[]>(mockMissions.slice(0, 3));
   const [events] = useState<HomeEvent[]>(mockHomeEvents);
   const [initiatives, setInitiatives] = useState<Initiative[]>(mockInitiatives);
   const [likedInitiatives, setLikedInitiatives] = useState<Set<string>>(new Set());
@@ -159,13 +161,13 @@ export default function HomeScreen() {
               <Text style={styles.seeAll}>Все</Text>
             </TouchableOpacity>
           </View>
-          {missions.map(mission => (
-            <TouchableOpacity key={mission.id} style={styles.missionCard}>
-              <View style={styles.missionIcon}>
-                {getTypeIcon(mission.type)}
+          {missions.slice(0, 3).map(mission => (
+            <TouchableOpacity key={mission.id} style={styles.missionCard} disabled={mission.completed}>
+              <View style={[styles.missionIcon, mission.completed && styles.missionIconCompleted]}>
+                {mission.completed ? <Check size={20} color={theme.colors.success} /> : getTypeIcon(mission.type)}
               </View>
               <View style={styles.missionDetails}>
-                <Text style={styles.missionTitle}>{mission.title}</Text>
+                <Text style={[styles.missionTitle, mission.completed && styles.missionTitleCompleted]}>{mission.title}</Text>
                 <View style={styles.missionMeta}>
                   <Text style={[styles.missionDifficulty, { color: getDifficultyColor(mission.difficulty) }]}>
                     {mission.difficulty}
@@ -176,7 +178,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View style={styles.missionAction}>
-                <Plus size={20} color={theme.colors.primary} />
+                {mission.completed ? <Check size={24} color={theme.colors.success} /> : <Plus size={24} color={theme.colors.primary} />}
               </View>
             </TouchableOpacity>
           ))}
@@ -423,6 +425,9 @@ const getStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     marginRight: 15,
   },
+  missionIconCompleted: {
+    backgroundColor: theme.colors.successMuted,
+  },
   missionDetails: {
     flex: 1,
   },
@@ -431,6 +436,10 @@ const getStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color: theme.colors.text,
     marginBottom: 5,
+  },
+  missionTitleCompleted: {
+    textDecorationLine: 'line-through',
+    color: theme.colors.subtext,
   },
   missionMeta: {
     flexDirection: 'row',

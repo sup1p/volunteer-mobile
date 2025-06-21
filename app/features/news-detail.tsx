@@ -1,14 +1,48 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { mockNews } from '@/src/data/mockData';
-import { Eye, MessageSquare } from 'lucide-react-native';
+import { Eye, MessageSquare, Share2 } from 'lucide-react-native';
+import { useMissions } from '@/src/context/MissionContext';
+import * as Clipboard from 'expo-clipboard';
 
 const NewsDetailScreen = () => {
     const { id } = useLocalSearchParams();
     const { theme } = useTheme();
+    const { completeMission, getMissionById } = useMissions();
     const newsArticle = mockNews.find(article => article.id === id);
+    const shareMissionId = '1';
+
+    const handleShare = async () => {
+        if (!newsArticle) return;
+
+        const mission = getMissionById(shareMissionId);
+
+        Alert.alert(
+            'Поделиться новостью',
+            `URL: ${newsArticle.shareUrl}`,
+            [
+                {
+                    text: 'Отмена',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Копировать ссылку',
+                    onPress: async () => {
+                        await Clipboard.setStringAsync(newsArticle.shareUrl);
+                        if (mission && !mission.completed) {
+                            completeMission(shareMissionId);
+                            Alert.alert('Ссылка скопирована!', 'Ежедневное задание "Поделиться статьей" выполнено!');
+                        } else {
+                            Alert.alert('Ссылка скопирована!');
+                        }
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
+    };
 
     const styles = StyleSheet.create({
         container: {
@@ -44,10 +78,19 @@ const NewsDetailScreen = () => {
             borderBottomColor: theme.colors.border,
             paddingBottom: 12,
         },
+        metaLeft: {
+            flex: 1,
+        },
+        metaRight: {
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
         metaText: {
             fontSize: 14,
             fontFamily: 'Inter-Regular',
             color: theme.colors.subtext,
+            flexDirection: 'row',
+            alignItems: 'center',
         },
         statsContainer: {
             flexDirection: 'row',
@@ -58,6 +101,7 @@ const NewsDetailScreen = () => {
             fontSize: 14,
             fontFamily: 'Inter-Regular',
             color: theme.colors.subtext,
+            lineHeight: 26,
         },
         description: {
             fontSize: 16,
@@ -68,6 +112,9 @@ const NewsDetailScreen = () => {
         category: {
             fontFamily: 'Inter-Medium',
             color: theme.colors.danger,
+        },
+        shareButton: {
+            marginLeft: 16,
         }
     });
 
@@ -86,12 +133,19 @@ const NewsDetailScreen = () => {
             <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
                 <Text style={styles.title}>{newsArticle.title}</Text>
                 <View style={styles.metaContainer}>
-                    <Text style={styles.metaText}><Text style={styles.category}>{newsArticle.category}</Text> • {newsArticle.timestamp}</Text>
-                    <View style={styles.statsContainer}>
-                        <Eye size={16} color={theme.colors.subtext} />
-                        <Text style={styles.statsText}>{newsArticle.views}</Text>
-                        <MessageSquare size={16} color={theme.colors.subtext} style={{ marginLeft: 16 }} />
-                        <Text style={styles.statsText}>{newsArticle.comments}</Text>
+                    <View style={styles.metaLeft}>
+                        <Text style={styles.metaText}><Text style={styles.category}>{newsArticle.category}</Text> • {newsArticle.timestamp}</Text>
+                    </View>
+                    <View style={styles.metaRight}>
+                        <View style={styles.statsContainer}>
+                            <Eye size={16} color={theme.colors.subtext} />
+                            <Text style={styles.statsText}>{newsArticle.views}</Text>
+                            <MessageSquare size={16} color={theme.colors.subtext} style={{ marginLeft: 16 }} />
+                            <Text style={styles.statsText}>{newsArticle.comments}</Text>
+                        </View>
+                        <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+                            <Share2 size={22} color={theme.colors.primary} />
+                        </TouchableOpacity>
                     </View>
                 </View>
                 <Image source={{ uri: newsArticle.imageUrl }} style={styles.image} />
