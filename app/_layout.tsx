@@ -9,15 +9,27 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { isDarkMode } = useTheme();
+  const { theme, isDarkMode } = useTheme();
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="splash" />
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="(tabs)" />
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: theme.colors.card,
+          },
+          headerTintColor: theme.colors.text,
+          headerTitleStyle: {
+            color: theme.colors.text,
+            fontFamily: 'Inter-SemiBold',
+          },
+          headerShadowVisible: false,
+        }}
+      >
+        <Stack.Screen name="splash" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
-        <Stack.Screen name="features" options={{ headerShown: false }} />
+        <Stack.Screen name="features" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
