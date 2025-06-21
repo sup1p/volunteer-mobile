@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Send, Bot, User, CircleHelp as HelpCircle, FileText, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -32,6 +33,9 @@ interface QuickAction {
 }
 
 export default function ChatScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -40,7 +44,7 @@ export default function ChatScreen() {
       timestamp: new Date(),
     },
   ]);
-  
+
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -122,7 +126,7 @@ export default function ChatScreen() {
 
   const generateBotResponse = (userInput: string): string => {
     const lowerInput = userInput.toLowerCase();
-    
+
     // Check for predefined responses
     for (const response of predefinedResponses) {
       if (response.keywords.some(keyword => lowerInput.includes(keyword))) {
@@ -166,9 +170,9 @@ export default function ChatScreen() {
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('ru-RU', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -176,13 +180,13 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#667eea', '#764ba2']}
+        colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
         style={styles.header}
       >
         <View style={styles.headerContent}>
           <View style={styles.botInfo}>
             <View style={styles.botAvatar}>
-              <Bot color="#ffffff" size={24} />
+              <Bot color={theme.colors.lightText} size={24} />
             </View>
             <View>
               <Text style={styles.botName}>ИИ-Помощник</Text>
@@ -203,7 +207,7 @@ export default function ChatScreen() {
                 style={styles.quickActionButton}
                 onPress={() => handleQuickAction(action)}
               >
-                <IconComponent color="#667eea" size={18} />
+                <IconComponent color={theme.colors.primary} size={18} />
                 <Text style={styles.quickActionText}>{action.title}</Text>
               </TouchableOpacity>
             );
@@ -233,10 +237,10 @@ export default function ChatScreen() {
             >
               {message.isBot && (
                 <View style={styles.messageAvatar}>
-                  <Bot color="#667eea" size={16} />
+                  <Bot color={theme.colors.primary} size={16} />
                 </View>
               )}
-              
+
               <View
                 style={[
                   styles.messageBubble,
@@ -251,16 +255,11 @@ export default function ChatScreen() {
                 >
                   {message.text}
                 </Text>
-                <Text
-                  style={[
-                    styles.messageTime,
-                    message.isBot ? styles.botMessageTime : styles.userMessageTime,
-                  ]}
-                >
+                <Text style={[styles.messageTimestamp, message.isBot ? styles.botTimestamp : styles.userTimestamp]}>
                   {formatTime(message.timestamp)}
                 </Text>
               </View>
-              
+
               {!message.isBot && (
                 <View style={styles.messageAvatar}>
                   <User color="#ffffff" size={16} />
@@ -268,14 +267,14 @@ export default function ChatScreen() {
               )}
             </View>
           ))}
-          
+
           {isTyping && (
-            <View style={[styles.messageContainer, styles.botMessageContainer]}>
+            <View style={styles.typingIndicatorContainer}>
               <View style={styles.messageAvatar}>
-                <Bot color="#667eea" size={16} />
+                <Bot color={theme.colors.primary} size={16} />
               </View>
               <View style={[styles.messageBubble, styles.botMessageBubble]}>
-                <Text style={styles.typingText}>Печатает...</Text>
+                <Text style={styles.typingIndicatorText}>Печатает...</Text>
               </View>
             </View>
           )}
@@ -284,23 +283,20 @@ export default function ChatScreen() {
         {/* Input */}
         <View style={styles.inputContainer}>
           <TextInput
-            style={styles.textInput}
-            placeholder="Напишите ваш вопрос..."
-            placeholderTextColor="#999"
+            style={styles.input}
+            placeholder="Спросите что-нибудь..."
+            placeholderTextColor={theme.colors.subtext}
             value={inputText}
             onChangeText={setInputText}
             multiline
             maxLength={500}
           />
           <TouchableOpacity
-            style={[
-              styles.sendButton,
-              !inputText.trim() && styles.sendButtonDisabled,
-            ]}
+            style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
             onPress={() => sendMessage(inputText)}
             disabled={!inputText.trim()}
           >
-            <Send color="#ffffff" size={20} />
+            <Send color={theme.colors.lightText} size={20} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -308,27 +304,31 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
   },
   header: {
+    paddingTop: 20,
+    paddingBottom: 20,
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   botInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   botAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -337,146 +337,145 @@ const styles = StyleSheet.create({
   botName: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   botStatus: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.8,
   },
   quickActions: {
-    paddingVertical: 15,
-    paddingLeft: 20,
-    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: theme.colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.border,
   },
   quickActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f4ff',
+    backgroundColor: theme.colors.inputBackground,
     paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   quickActionText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#667eea',
-    marginLeft: 6,
+    color: theme.colors.text,
+    marginLeft: 8,
   },
   chatContainer: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   messagesContainer: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   messagesContent: {
-    paddingVertical: 20,
+    padding: 15,
   },
   messageContainer: {
     flexDirection: 'row',
     marginBottom: 15,
+    maxWidth: '85%',
     alignItems: 'flex-end',
   },
   botMessageContainer: {
-    justifyContent: 'flex-start',
+    alignSelf: 'flex-start',
   },
   userMessageContainer: {
-    justifyContent: 'flex-end',
+    alignSelf: 'flex-end',
   },
   messageAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#f0f4ff',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginRight: 10,
   },
   messageBubble: {
-    maxWidth: width * 0.7,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
   botMessageBubble: {
-    backgroundColor: '#ffffff',
-    borderBottomLeftRadius: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: theme.colors.card,
+    borderTopLeftRadius: 4,
   },
   userMessageBubble: {
-    backgroundColor: '#667eea',
-    borderBottomRightRadius: 4,
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: 4,
   },
   messageText: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Inter-Regular',
     lineHeight: 22,
   },
   botMessageText: {
-    color: '#333',
+    color: theme.colors.text,
   },
   userMessageText: {
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
-  messageTime: {
-    fontSize: 11,
+  messageTimestamp: {
+    fontSize: 12,
     fontFamily: 'Inter-Medium',
-    marginTop: 5,
+    marginTop: 8,
+    textAlign: 'right',
   },
-  botMessageTime: {
-    color: '#999',
+  botTimestamp: {
+    color: theme.colors.subtext,
   },
-  userMessageTime: {
-    color: '#ffffff',
-    opacity: 0.7,
-  },
-  typingText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: '#999',
-    fontStyle: 'italic',
+  userTimestamp: {
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: theme.colors.card,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: theme.colors.border,
   },
-  textInput: {
+  input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 25,
+    minHeight: 44,
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 22,
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    paddingTop: 12,
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    maxHeight: 100,
-    marginRight: 10,
-    backgroundColor: '#f8f9fa',
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.text,
   },
   sendButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#667eea',
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 10,
   },
   sendButtonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: theme.colors.disabled,
+  },
+  typingIndicatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+  },
+  typingIndicatorText: {
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.subtext,
+    fontSize: 16,
+    fontStyle: 'italic',
   },
 });

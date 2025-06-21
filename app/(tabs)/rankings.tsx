@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Filter,
 } from 'lucide-react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -44,6 +45,9 @@ interface LeaderboardCategory {
 }
 
 export default function RankingsScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   const [selectedCategory, setSelectedCategory] = useState('overall');
   const [selectedRegion, setSelectedRegion] = useState('all');
 
@@ -52,25 +56,25 @@ export default function RankingsScreen() {
       id: 'overall',
       title: 'Общий рейтинг',
       icon: Trophy,
-      color: '#f59e0b',
+      color: theme.colors.warning,
     },
     {
       id: 'missions',
       title: 'По миссиям',
       icon: Target,
-      color: '#10b981',
+      color: theme.colors.success,
     },
     {
       id: 'events',
       title: 'По мероприятиям',
       icon: Users,
-      color: '#667eea',
+      color: theme.colors.primary,
     },
     {
       id: 'monthly',
       title: 'За месяц',
       icon: TrendingUp,
-      color: '#ef4444',
+      color: theme.colors.danger,
     },
   ];
 
@@ -204,8 +208,8 @@ export default function RankingsScreen() {
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Crown color="#f59e0b" size={20} />;
-    if (rank === 2) return <Medal color="#e5e7eb" size={20} />;
+    if (rank === 1) return <Crown color={theme.colors.warning} size={20} />;
+    if (rank === 2) return <Medal color={theme.colors.subtext} size={20} />;
     if (rank === 3) return <Award color="#cd7c2f" size={20} />;
     return null;
   };
@@ -219,7 +223,7 @@ export default function RankingsScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={['#667eea', '#764ba2']}
+          colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
           style={styles.header}
         >
           <Text style={styles.headerTitle}>Рейтинги</Text>
@@ -232,7 +236,7 @@ export default function RankingsScreen() {
         {currentUser && (
           <View style={styles.currentUserContainer}>
             <LinearGradient
-              colors={['#10b981', '#059669']}
+              colors={[theme.colors.success, '#059669']}
               style={styles.currentUserCard}
             >
               <View style={styles.currentUserInfo}>
@@ -264,12 +268,13 @@ export default function RankingsScreen() {
                   key={category.id}
                   style={[
                     styles.categoryButton,
-                    selectedCategory === category.id && styles.categoryButtonActive,
+                    selectedCategory === category.id &&
+                    [styles.categoryButtonActive, { backgroundColor: category.color }],
                   ]}
                   onPress={() => setSelectedCategory(category.id)}
                 >
                   <IconComponent
-                    color={selectedCategory === category.id ? '#ffffff' : category.color}
+                    color={selectedCategory === category.id ? theme.colors.lightText : category.color}
                     size={20}
                   />
                   <Text
@@ -296,7 +301,7 @@ export default function RankingsScreen() {
                 <Text style={styles.podiumInitials}>ДС</Text>
               </View>
               <View style={styles.podiumRank}>
-                <Medal color="#e5e7eb" size={24} />
+                <Medal color={theme.colors.subtext} size={24} />
               </View>
               <Text style={styles.podiumName}>Дмитрий С.</Text>
               <Text style={styles.podiumPoints}>{topUsers[1].points}</Text>
@@ -308,7 +313,7 @@ export default function RankingsScreen() {
                 <Text style={styles.podiumInitials}>МИ</Text>
               </View>
               <View style={styles.podiumRank}>
-                <Crown color="#f59e0b" size={28} />
+                <Crown color={theme.colors.warning} size={28} />
               </View>
               <Text style={styles.podiumName}>Мария И.</Text>
               <Text style={styles.podiumPoints}>{topUsers[0].points}</Text>
@@ -331,7 +336,7 @@ export default function RankingsScreen() {
         {/* Full Rankings */}
         <View style={styles.rankingsSection}>
           <Text style={styles.sectionTitle}>Полный рейтинг</Text>
-          
+
           <View style={styles.rankingsContainer}>
             {topUsers.map((user, index) => (
               <View
@@ -354,13 +359,13 @@ export default function RankingsScreen() {
                       </Text>
                     )}
                   </View>
-                  
+
                   <View style={styles.rankingAvatar}>
                     <Text style={styles.rankingInitials}>
                       {user.name.split(' ').map(n => n[0]).join('')}
                     </Text>
                   </View>
-                  
+
                   <View style={styles.rankingInfo}>
                     <Text style={[
                       styles.rankingName,
@@ -376,7 +381,7 @@ export default function RankingsScreen() {
                     </View>
                   </View>
                 </View>
-                
+
                 <View style={styles.rankingRight}>
                   <Text style={[
                     styles.rankingPoints,
@@ -399,25 +404,25 @@ export default function RankingsScreen() {
         {/* Statistics */}
         <View style={styles.statsSection}>
           <Text style={styles.sectionTitle}>Статистика</Text>
-          
+
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Users color="#667eea" size={24} />
+              <Users color={theme.colors.primary} size={24} />
               <Text style={styles.statValue}>1,847</Text>
               <Text style={styles.statLabel}>Всего волонтёров</Text>
             </View>
             <View style={styles.statCard}>
-              <Target color="#10b981" size={24} />
+              <Target color={theme.colors.success} size={24} />
               <Text style={styles.statValue}>12,456</Text>
               <Text style={styles.statLabel}>Миссий выполнено</Text>
             </View>
             <View style={styles.statCard}>
-              <Star color="#f59e0b" size={24} />
+              <Star color={theme.colors.warning} size={24} />
               <Text style={styles.statValue}>2.8M</Text>
               <Text style={styles.statLabel}>Баллов заработано</Text>
             </View>
             <View style={styles.statCard}>
-              <Trophy color="#ef4444" size={24} />
+              <Trophy color={theme.colors.danger} size={24} />
               <Text style={styles.statValue}>156</Text>
               <Text style={styles.statLabel}>Активных регионов</Text>
             </View>
@@ -428,97 +433,98 @@ export default function RankingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingTop: 40,
+    paddingBottom: 80,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
   headerTitle: {
     fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
-    marginBottom: 5,
+    color: theme.colors.lightText,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.9,
+    textAlign: 'center',
   },
   currentUserContainer: {
-    paddingHorizontal: 20,
-    marginTop: -15,
-    marginBottom: 20,
+    marginHorizontal: 20,
+    marginTop: -60,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
   currentUserCard: {
-    borderRadius: 15,
+    borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
   },
   currentUserInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   currentUserAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
   currentUserInitials: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#ffffff',
-  },
-  currentUserDetails: {
-    flex: 1,
-  },
-  currentUserName: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#ffffff',
-    opacity: 0.9,
-  },
-  currentUserRank: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
+  },
+  currentUserDetails: {},
+  currentUserName: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.lightText,
+    opacity: 0.8,
+  },
+  currentUserRank: {
+    fontSize: 22,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.lightText,
+    marginVertical: 2,
   },
   currentUserPoints: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.9,
   },
   currentUserBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: 15,
   },
   currentUserLevel: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.lightText,
   },
   categoryContainer: {
     paddingVertical: 15,
@@ -527,28 +533,26 @@ const styles = StyleSheet.create({
   categoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-    shadowColor: '#000',
+    backgroundColor: theme.colors.card,
+    borderRadius: 15,
+    padding: 12,
+    marginRight: 12,
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 3,
   },
   categoryButtonActive: {
-    backgroundColor: '#667eea',
+    elevation: 6,
   },
   categoryButtonText: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#333',
-    marginLeft: 8,
+    color: theme.colors.subtext,
   },
   categoryButtonTextActive: {
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   podiumContainer: {
     paddingHorizontal: 20,
@@ -557,7 +561,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#333',
+    color: theme.colors.text,
     marginBottom: 15,
   },
   podium: {
@@ -568,11 +572,11 @@ const styles = StyleSheet.create({
   },
   podiumPlace: {
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 15,
     padding: 15,
     marginHorizontal: 5,
-    shadowColor: '#000',
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -594,7 +598,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#f0f4ff',
+    backgroundColor: `${theme.colors.primary}20`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -602,7 +606,7 @@ const styles = StyleSheet.create({
   podiumInitials: {
     fontSize: 16,
     fontFamily: 'Inter-Bold',
-    color: '#667eea',
+    color: theme.colors.primary,
   },
   podiumRank: {
     marginBottom: 8,
@@ -610,24 +614,24 @@ const styles = StyleSheet.create({
   podiumName: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#333',
+    color: theme.colors.text,
     textAlign: 'center',
     marginBottom: 4,
   },
   podiumPoints: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
   },
   rankingsSection: {
     paddingHorizontal: 20,
     paddingVertical: 20,
   },
   rankingsContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 15,
     padding: 15,
-    shadowColor: '#000',
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -639,10 +643,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.border,
   },
   currentUserRanking: {
-    backgroundColor: '#f0f4ff',
+    backgroundColor: `${theme.colors.primary}20`,
     marginHorizontal: -15,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -657,7 +661,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -668,13 +672,13 @@ const styles = StyleSheet.create({
   rankingPositionText: {
     fontSize: 14,
     fontFamily: 'Inter-Bold',
-    color: '#666',
+    color: theme.colors.subtext,
   },
   rankingAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f4ff',
+    backgroundColor: `${theme.colors.primary}20`,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -682,7 +686,7 @@ const styles = StyleSheet.create({
   rankingInitials: {
     fontSize: 14,
     fontFamily: 'Inter-Bold',
-    color: '#667eea',
+    color: theme.colors.primary,
   },
   rankingInfo: {
     flex: 1,
@@ -690,11 +694,11 @@ const styles = StyleSheet.create({
   rankingName: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#333',
+    color: theme.colors.text,
     marginBottom: 2,
   },
   currentUserText: {
-    color: '#667eea',
+    color: theme.colors.primary,
   },
   rankingDetails: {
     flexDirection: 'row',
@@ -703,12 +707,12 @@ const styles = StyleSheet.create({
   rankingRegion: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#999',
+    color: theme.colors.subtext,
   },
   rankingLevel: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
   },
   rankingRight: {
     alignItems: 'flex-end',
@@ -716,15 +720,15 @@ const styles = StyleSheet.create({
   rankingPoints: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: '#333',
+    color: theme.colors.text,
   },
   rankingPointsLabel: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
   },
   youBadge: {
-    backgroundColor: '#667eea',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -733,7 +737,7 @@ const styles = StyleSheet.create({
   youBadgeText: {
     fontSize: 10,
     fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   statsSection: {
     paddingHorizontal: 20,
@@ -746,12 +750,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: (width - 55) / 2,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 15,
     padding: 15,
     alignItems: 'center',
     marginBottom: 15,
-    shadowColor: '#000',
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -760,13 +764,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#333',
+    color: theme.colors.text,
     marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
     marginTop: 2,
     textAlign: 'center',
   },

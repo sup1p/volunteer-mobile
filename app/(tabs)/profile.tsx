@@ -31,6 +31,7 @@ import {
   GraduationCap,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -56,23 +57,32 @@ interface RankingUser {
 interface QuickAction {
   id: string;
   title: string;
-  description: string;
   icon: any;
   color: string;
-  route?: string;
+  screen: any;
+}
+
+interface Stat {
+  id: string;
+  value: string;
+  label: string;
+  icon: any;
 }
 
 export default function ProfileScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   const [userData] = useState({
     name: 'Александр Петров',
-    email: 'alex.petrov@email.com',
+    email: 'a.petrov@email.com',
     level: 5,
     points: 1250,
     nextLevelPoints: 1500,
     rank: 12,
     completedMissions: 23,
-    coursesCompleted: 3,
     eventsAttended: 8,
+    coursesCompleted: 2,
     joinDate: '15 марта 2024',
     totalVolunteers: 1847,
   });
@@ -125,52 +135,71 @@ export default function ProfileScreen() {
 
   const quickActions: QuickAction[] = [
     {
-      id: 'learn',
-      title: 'Обучение',
-      description: 'Курсы, квизы и сертификаты',
-      icon: GraduationCap,
-      color: '#667eea',
-    },
-    {
       id: 'report',
       title: 'Подать сигнал',
-      description: 'Сообщить о нарушениях',
       icon: Flag,
       color: '#ef4444',
+      screen: '/features/report',
     },
     {
       id: 'initiative',
       title: 'Инициативы',
-      description: 'Предложить идею',
       icon: Lightbulb,
       color: '#f59e0b',
+      screen: '/features/initiative',
     },
     {
       id: 'feedback',
       title: 'Обратная связь',
-      description: 'Оценить мероприятие',
       icon: FileText,
       color: '#10b981',
+      screen: '/features/feedback',
+    },
+    {
+      id: 'learning',
+      title: 'Обучение',
+      icon: GraduationCap,
+      color: '#3b82f6',
+      screen: '/features/learning',
     },
   ];
 
-  const getLevelColor = (level: number) => {
-    if (level >= 8) return '#8b5cf6';
-    if (level >= 6) return '#f59e0b';
-    if (level >= 4) return '#10b981';
-    return '#667eea';
-  };
+  const accountActions = [
+    {
+      id: 'edit',
+      title: 'Редактировать профиль',
+      icon: User,
+      screen: '/features/edit-profile',
+    },
+    { id: 'settings', title: 'Настройки', icon: Settings, screen: '/features/settings' },
+    { id: 'logout', title: 'Выйти', icon: LogOut, screen: '/auth' },
+  ];
 
   const getLevelTitle = (level: number) => {
-    if (level >= 8) return 'Эксперт';
-    if (level >= 6) return 'Опытный';
-    if (level >= 4) return 'Активный';
-    return 'Новичок';
+    if (level < 5) return 'Новичок';
+    if (level < 10) return 'Активист';
+    if (level < 15) return 'Ветеран';
+    return 'Мастер';
+  };
+
+  const getLevelColor = (level: number) => {
+    if (level < 5) return '#a0aec0'; // gray
+    if (level < 10) return '#4299e1'; // blue
+    if (level < 15) return '#9f7aea'; // purple
+    return '#f56565'; // red
   };
 
   const handleQuickAction = (action: QuickAction) => {
-    // Здесь будет навигация к соответствующим экранам
-    console.log('Quick action:', action.id);
+    if (action.screen) {
+      router.push(action.screen as any);
+    } else {
+      console.log('Quick action:', action.id);
+    }
+  };
+
+  const handleLogout = () => {
+    // In a real app, you would also clear any user session data
+    router.replace('/auth');
   };
 
   return (
@@ -178,12 +207,12 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
         <LinearGradient
-          colors={['#667eea', '#764ba2']}
+          colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
           style={styles.header}
         >
           <View style={styles.profileInfo}>
             <View style={styles.avatar}>
-              <User color="#ffffff" size={40} />
+              <User color={theme.colors.lightText} size={40} />
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{userData.name}</Text>
@@ -196,8 +225,8 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </View>
-            <TouchableOpacity style={styles.settingsButton}>
-              <Settings color="#ffffff" size={24} />
+            <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/features/settings' as any)}>
+              <Settings color={theme.colors.lightText} size={24} />
             </TouchableOpacity>
           </View>
 
@@ -246,24 +275,19 @@ export default function ProfileScreen() {
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Быстрые действия</Text>
-          <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => {
-              const IconComponent = action.icon;
-              return (
-                <TouchableOpacity
-                  key={action.id}
-                  style={styles.quickActionCard}
-                  onPress={() => handleQuickAction(action)}
-                >
-                  <View style={[styles.quickActionIcon, { backgroundColor: `${action.color}20` }]}>
-                    <IconComponent color={action.color} size={24} />
-                  </View>
-                  <Text style={styles.quickActionTitle}>{action.title}</Text>
-                  <Text style={styles.quickActionDescription}>{action.description}</Text>
-                  <ChevronRight color="#ccc" size={16} style={styles.quickActionArrow} />
-                </TouchableOpacity>
-              );
-            })}
+          <View style={styles.quickActionsContainer}>
+            {quickActions.map(action => (
+              <TouchableOpacity
+                key={action.id}
+                style={styles.quickAction}
+                onPress={() => router.push(action.screen as any)}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: action.color }]}>
+                  <action.icon color="#ffffff" size={24} />
+                </View>
+                <Text style={styles.quickActionText}>{action.title}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
@@ -309,7 +333,7 @@ export default function ProfileScreen() {
                   >
                     {achievement.description}
                   </Text>
-                  
+
                   {!achievement.earned && achievement.progress && achievement.maxProgress && (
                     <View style={styles.achievementProgress}>
                       <View style={styles.achievementProgressBar}>
@@ -400,25 +424,31 @@ export default function ProfileScreen() {
         {/* Account Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Аккаунт</Text>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Settings color="#667eea" size={20} />
-            <Text style={styles.actionButtonText}>Настройки</Text>
-            <ChevronRight color="#ccc" size={16} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <User color="#667eea" size={20} />
-            <Text style={styles.actionButtonText}>Редактировать профиль</Text>
-            <ChevronRight color="#ccc" size={16} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.actionButton, styles.logoutButton]}>
-            <LogOut color="#ef4444" size={20} />
-            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>
-              Выйти из аккаунта
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.actionsContainer}>
+            {accountActions.map(action => (
+              <TouchableOpacity
+                key={action.id}
+                style={[styles.actionButton, action.id === 'logout' && styles.logoutButton]}
+                onPress={() => {
+                  if (action.id === 'logout') {
+                    // Perform logout logic here
+                    router.replace(action.screen as any);
+                  } else {
+                    router.push(action.screen as any);
+                  }
+                }}
+              >
+                <action.icon
+                  color={action.id === 'logout' ? theme.colors.danger : theme.colors.subtext}
+                  size={22}
+                />
+                <Text style={[styles.actionButtonText, action.id === 'logout' && styles.logoutButtonText]}>
+                  {action.title}
+                </Text>
+                {action.id !== 'logout' && <ChevronRight color={theme.colors.subtext} size={20} />}
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* Footer Info */}
@@ -435,10 +465,10 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
@@ -469,13 +499,13 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 22,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.8,
     marginBottom: 8,
   },
@@ -490,7 +520,7 @@ const styles = StyleSheet.create({
   levelText: {
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   settingsButton: {
     padding: 8,
@@ -507,12 +537,12 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   progressSubtext: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.8,
   },
   progressBar: {
@@ -523,7 +553,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.lightText,
     borderRadius: 4,
   },
   statsContainer: {
@@ -534,7 +564,7 @@ const styles = StyleSheet.create({
     marginTop: -15,
   },
   statCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 15,
     padding: 15,
     alignItems: 'center',
@@ -548,13 +578,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#333',
+    color: theme.colors.text,
     marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
     marginTop: 2,
     textAlign: 'center',
   },
@@ -571,56 +601,37 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#333',
+    color: theme.colors.text,
     marginBottom: 15,
   },
   seeAll: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#667eea',
+    color: theme.colors.primary,
   },
-  quickActionsGrid: {
+  quickActionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  quickActionCard: {
-    width: (width - 55) / 2,
-    backgroundColor: '#ffffff',
-    borderRadius: 15,
-    padding: 15,
+  quickAction: {
+    alignItems: 'center',
+    width: (width - 60) / 4,
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    position: 'relative',
   },
   quickActionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  quickActionTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  quickActionDescription: {
+  quickActionText: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
-    lineHeight: 16,
-  },
-  quickActionArrow: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
+    color: theme.colors.text,
+    textAlign: 'center',
   },
   achievementsGrid: {
     flexDirection: 'row',
@@ -629,7 +640,7 @@ const styles = StyleSheet.create({
   },
   achievementCard: {
     width: (width - 55) / 2,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 15,
     padding: 15,
     marginBottom: 15,
@@ -641,7 +652,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   achievementCardLocked: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.card,
     opacity: 0.7,
   },
   achievementIcon: {
@@ -653,27 +664,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   achievementIconLocked: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.border,
   },
   achievementTitle: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#333',
+    color: theme.colors.text,
     textAlign: 'center',
     marginBottom: 5,
   },
   achievementTitleLocked: {
-    color: '#999',
+    color: theme.colors.subtext,
   },
   achievementDescription: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
     textAlign: 'center',
     lineHeight: 16,
   },
   achievementDescriptionLocked: {
-    color: '#ccc',
+    color: theme.colors.disabled,
   },
   achievementProgress: {
     width: '100%',
@@ -681,7 +692,7 @@ const styles = StyleSheet.create({
   },
   achievementProgressBar: {
     height: 4,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.border,
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 5,
@@ -693,11 +704,11 @@ const styles = StyleSheet.create({
   achievementProgressText: {
     fontSize: 10,
     fontFamily: 'Inter-SemiBold',
-    color: '#666',
+    color: theme.colors.subtext,
     textAlign: 'center',
   },
   rankingContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 15,
     padding: 15,
     shadowColor: '#000',
@@ -712,10 +723,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.border,
   },
   currentUserRanking: {
-    backgroundColor: '#f0f4ff',
+    backgroundColor: `${theme.colors.primary}20`,
     marginHorizontal: -15,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -730,7 +741,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -741,7 +752,7 @@ const styles = StyleSheet.create({
   rankingPositionText: {
     fontSize: 14,
     fontFamily: 'Inter-Bold',
-    color: '#666',
+    color: theme.colors.subtext,
   },
   rankingInfo: {
     flex: 1,
@@ -749,11 +760,11 @@ const styles = StyleSheet.create({
   rankingName: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#333',
+    color: theme.colors.text,
     marginBottom: 2,
   },
   currentUserText: {
-    color: '#667eea',
+    color: theme.colors.primary,
   },
   rankingDetails: {
     flexDirection: 'row',
@@ -762,15 +773,15 @@ const styles = StyleSheet.create({
   rankingLevel: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
   },
   rankingPoints: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
   },
   currentUserBadge: {
-    backgroundColor: '#667eea',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -780,43 +791,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color: '#ffffff',
   },
+  actionsContainer: {
+    backgroundColor: theme.colors.card,
+    borderRadius: 12,
+  },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     paddingVertical: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   actionButtonText: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#333',
-    marginLeft: 12,
+    color: theme.colors.text,
+    marginLeft: 15,
     flex: 1,
   },
   logoutButton: {
-    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
   logoutButtonText: {
-    color: '#ef4444',
+    color: theme.colors.danger,
   },
   footerInfo: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 30,
+    padding: 30,
   },
   footerText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#999',
-    marginBottom: 5,
-    textAlign: 'center',
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.subtext,
   },
 });

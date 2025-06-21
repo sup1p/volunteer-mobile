@@ -20,6 +20,7 @@ import {
   Star,
   Plus,
 } from 'lucide-react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +42,9 @@ interface Event {
 }
 
 export default function HomeScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   const [userData] = useState({
     name: 'Александр Петров',
     level: 5,
@@ -96,26 +100,26 @@ export default function HomeScreen() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return '#10b981';
+        return theme.colors.success;
       case 'medium':
-        return '#f59e0b';
+        return theme.colors.warning;
       case 'hard':
-        return '#ef4444';
+        return theme.colors.danger;
       default:
-        return '#6b7280';
+        return theme.colors.subtext;
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'daily':
-        return <Clock size={14} color="#667eea" />;
+        return <Clock size={14} color={theme.colors.primary} />;
       case 'weekly':
-        return <Calendar size={14} color="#667eea" />;
+        return <Calendar size={14} color={theme.colors.primary} />;
       case 'special':
-        return <Star size={14} color="#f59e0b" />;
+        return <Star size={14} color={theme.colors.warning} />;
       default:
-        return <Target size={14} color="#667eea" />;
+        return <Target size={14} color={theme.colors.primary} />;
     }
   };
 
@@ -124,7 +128,7 @@ export default function HomeScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={['#667eea', '#764ba2']}
+          colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
           style={styles.header}
         >
           <View style={styles.headerContent}>
@@ -136,20 +140,20 @@ export default function HomeScreen() {
               <Text style={styles.levelText}>Ур. {userData.level}</Text>
             </View>
           </View>
-          
+
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <TrendingUp color="#ffffff" size={20} />
+              <TrendingUp color={theme.colors.lightText} size={20} />
               <Text style={styles.statValue}>{userData.points}</Text>
               <Text style={styles.statLabel}>Баллы</Text>
             </View>
             <View style={styles.statItem}>
-              <Users color="#ffffff" size={20} />
+              <Users color={theme.colors.lightText} size={20} />
               <Text style={styles.statValue}>#{userData.rank}</Text>
               <Text style={styles.statLabel}>Рейтинг</Text>
             </View>
             <View style={styles.statItem}>
-              <Award color="#ffffff" size={20} />
+              <Award color={theme.colors.lightText} size={20} />
               <Text style={styles.statValue}>{userData.completedMissions}</Text>
               <Text style={styles.statLabel}>Миссии</Text>
             </View>
@@ -181,39 +185,24 @@ export default function HomeScreen() {
               <Text style={styles.seeAll}>Все</Text>
             </TouchableOpacity>
           </View>
-          
-          {missions.map((mission) => (
+          {missions.map(mission => (
             <TouchableOpacity key={mission.id} style={styles.missionCard}>
-              <View style={styles.missionHeader}>
-                <View style={styles.missionType}>
-                  {getTypeIcon(mission.type)}
-                </View>
-                <View
-                  style={[
-                    styles.difficultyBadge,
-                    { backgroundColor: getDifficultyColor(mission.difficulty) },
-                  ]}
-                >
-                  <Text style={styles.difficultyText}>
-                    {mission.difficulty === 'easy'
-                      ? 'Легко'
-                      : mission.difficulty === 'medium'
-                      ? 'Средне'
-                      : 'Сложно'}
+              <View style={styles.missionIcon}>
+                {getTypeIcon(mission.type)}
+              </View>
+              <View style={styles.missionDetails}>
+                <Text style={styles.missionTitle}>{mission.title}</Text>
+                <View style={styles.missionMeta}>
+                  <Text style={[styles.missionDifficulty, { color: getDifficultyColor(mission.difficulty) }]}>
+                    {mission.difficulty}
+                  </Text>
+                  <Text style={styles.missionPoints}>
+                    <Star size={12} color={theme.colors.warning} /> {mission.points} баллов
                   </Text>
                 </View>
               </View>
-              
-              <Text style={styles.missionTitle}>{mission.title}</Text>
-              
-              <View style={styles.missionFooter}>
-                <View style={styles.pointsContainer}>
-                  <Star color="#f59e0b" size={16} fill="#f59e0b" />
-                  <Text style={styles.pointsText}>+{mission.points} баллов</Text>
-                </View>
-                <TouchableOpacity style={styles.startButton}>
-                  <Text style={styles.startButtonText}>Начать</Text>
-                </TouchableOpacity>
+              <View style={styles.missionAction}>
+                <Plus size={20} color={theme.colors.primary} />
               </View>
             </TouchableOpacity>
           ))}
@@ -222,51 +211,51 @@ export default function HomeScreen() {
         {/* Upcoming Events */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ближайшие события</Text>
+            <Text style={styles.sectionTitle}>Ближайшие мероприятия</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAll}>Календарь</Text>
+              <Text style={styles.seeAll}>Все</Text>
             </TouchableOpacity>
           </View>
-          
-          {events.map((event) => (
-            <TouchableOpacity key={event.id} style={styles.eventCard}>
-              <View style={styles.eventHeader}>
-                <Text style={styles.eventTitle}>{event.title}</Text>
-                <View style={styles.participantsContainer}>
-                  <Users color="#667eea" size={16} />
-                  <Text style={styles.participantsText}>
-                    {event.participants}/{event.maxParticipants}
-                  </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.eventScroll}>
+            {events.map(event => (
+              <TouchableOpacity key={event.id} style={styles.eventCard}>
+                <View style={styles.eventCardHeader}>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
                 </View>
-              </View>
-              
-              <View style={styles.eventDetails}>
-                <View style={styles.eventDetail}>
-                  <Calendar color="#666" size={14} />
-                  <Text style={styles.eventDetailText}>{event.date}</Text>
+                <View style={styles.eventMeta}>
+                  <View style={styles.eventMetaItem}>
+                    <Calendar size={14} color={theme.colors.subtext} />
+                    <Text style={styles.eventMetaText}>{event.date}</Text>
+                  </View>
+                  <View style={styles.eventMetaItem}>
+                    <MapPin size={14} color={theme.colors.subtext} />
+                    <Text style={styles.eventMetaText}>{event.location}</Text>
+                  </View>
                 </View>
-                <View style={styles.eventDetail}>
-                  <MapPin color="#666" size={14} />
-                  <Text style={styles.eventDetailText}>{event.location}</Text>
+                <View style={styles.eventFooter}>
+                  <View style={styles.eventParticipants}>
+                    <Users size={14} color={theme.colors.primary} />
+                    <Text style={styles.eventParticipantsText}>
+                      {event.participants} / {event.maxParticipants}
+                    </Text>
+                  </View>
+                  <TouchableOpacity style={styles.registerButton}>
+                    <Text style={styles.registerButtonText}>Участвовать</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-              
-              <TouchableOpacity style={styles.registerButton}>
-                <Plus color="#667eea" size={16} />
-                <Text style={styles.registerButtonText}>Зарегистрироваться</Text>
               </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
+            ))}
+          </ScrollView>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
@@ -286,13 +275,13 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.9,
   },
   userName: {
     fontSize: 24,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   levelBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -303,7 +292,7 @@ const styles = StyleSheet.create({
   levelText: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -316,13 +305,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     marginTop: 5,
   },
   statLabel: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.8,
     marginTop: 2,
   },
@@ -332,7 +321,7 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.9,
     marginBottom: 8,
   },
@@ -344,7 +333,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.lightText,
     borderRadius: 3,
   },
   section: {
@@ -360,141 +349,129 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#333',
+    color: theme.colors.text,
   },
   seeAll: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#667eea',
+    color: theme.colors.primary,
   },
   missionCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.card,
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  missionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  missionType: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#f0f0f0',
+  missionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 15,
   },
-  difficultyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  difficultyText: {
-    fontSize: 11,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+  missionDetails: {
+    flex: 1,
   },
   missionTitle: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#333',
-    marginBottom: 15,
-    lineHeight: 22,
+    color: theme.colors.text,
+    marginBottom: 5,
   },
-  missionFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pointsContainer: {
+  missionMeta: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  pointsText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#f59e0b',
-    marginLeft: 5,
+  missionDifficulty: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    textTransform: 'capitalize',
+    marginRight: 10,
   },
-  startButton: {
-    backgroundColor: '#667eea',
+  missionPoints: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.subtext,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  missionAction: {
+    marginLeft: 10,
+  },
+  eventScroll: {
+    marginHorizontal: -20,
     paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  startButtonText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
   },
   eventCard: {
-    backgroundColor: '#ffffff',
+    width: width * 0.75,
+    backgroundColor: theme.colors.card,
     borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
+    padding: 15,
+    marginRight: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  eventHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 15,
+  eventCardHeader: {
+    marginBottom: 10,
   },
   eventTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#333',
-    flex: 1,
-    marginRight: 10,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.text,
   },
-  participantsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  participantsText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#667eea',
-    marginLeft: 4,
-  },
-  eventDetails: {
+  eventMeta: {
     marginBottom: 15,
   },
-  eventDetail: {
+  eventMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 5,
   },
-  eventDetailText: {
+  eventMetaText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#666',
+    color: theme.colors.subtext,
     marginLeft: 8,
   },
-  registerButton: {
+  eventFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: 10,
+  },
+  eventParticipants: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f0f4ff',
-    paddingVertical: 12,
-    borderRadius: 10,
+  },
+  eventParticipantsText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.primary,
+    marginLeft: 5,
+  },
+  registerButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   registerButtonText: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#667eea',
-    marginLeft: 5,
+    color: theme.colors.lightText,
   },
 });

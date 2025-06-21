@@ -23,6 +23,7 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +42,9 @@ interface Event {
 }
 
 export default function CalendarScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -166,11 +170,11 @@ export default function CalendarScreen() {
     setShowEventModal(false);
   };
 
-  const filteredEvents = filter === 'all' 
-    ? events 
+  const filteredEvents = filter === 'all'
+    ? events
     : events.filter(event => event.type === filter);
 
-  const upcomingEvents = filteredEvents.filter(event => 
+  const upcomingEvents = filteredEvents.filter(event =>
     new Date(event.date) >= new Date()
   ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -179,7 +183,7 @@ export default function CalendarScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={['#667eea', '#764ba2']}
+          colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
           style={styles.header}
         >
           <Text style={styles.headerTitle}>Календарь событий</Text>
@@ -191,17 +195,17 @@ export default function CalendarScreen() {
         {/* Quick Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <CalendarIcon color="#667eea" size={24} />
+            <CalendarIcon color={theme.colors.primary} size={24} />
             <Text style={styles.statValue}>{upcomingEvents.length}</Text>
             <Text style={styles.statLabel}>Предстоящих</Text>
           </View>
           <View style={styles.statCard}>
-            <Users color="#10b981" size={24} />
+            <Users color={theme.colors.success} size={24} />
             <Text style={styles.statValue}>2</Text>
             <Text style={styles.statLabel}>Зарегистрирован</Text>
           </View>
           <View style={styles.statCard}>
-            <Star color="#f59e0b" size={24} />
+            <Star color={theme.colors.warning} size={24} />
             <Text style={styles.statValue}>280</Text>
             <Text style={styles.statLabel}>Баллов доступно</Text>
           </View>
@@ -242,512 +246,438 @@ export default function CalendarScreen() {
         {/* Events List */}
         <View style={styles.eventsSection}>
           <Text style={styles.sectionTitle}>Ближайшие события</Text>
-          
-          {upcomingEvents.map((event) => (
-            <TouchableOpacity
-              key={event.id}
-              style={styles.eventCard}
-              onPress={() => handleEventPress(event)}
-            >
-              <View style={styles.eventHeader}>
-                <View style={styles.eventTypeContainer}>
-                  <View
-                    style={[
-                      styles.eventTypeBadge,
-                      { backgroundColor: getEventTypeColor(event.type) },
-                    ]}
-                  >
-                    <Text style={styles.eventTypeText}>
-                      {getEventTypeName(event.type)}
+
+          {upcomingEvents.length > 0 ? (
+            upcomingEvents.map((event) => (
+              <TouchableOpacity
+                key={event.id}
+                style={[styles.eventCard, event.registered && styles.eventCardRegistered]}
+                onPress={() => handleEventPress(event)}
+              >
+                <View style={styles.eventCardHeader}>
+                  <View style={[styles.eventType, { backgroundColor: getEventTypeColor(event.type) }]}>
+                    <Text style={styles.eventType_text}>{getEventTypeName(event.type)}</Text>
+                  </View>
+                  <Text style={styles.eventDate}>{formatDate(event.date)}</Text>
+                </View>
+
+                <Text style={styles.eventTitle}>{event.title}</Text>
+
+                <View style={styles.eventInfoContainer}>
+                  <View style={styles.eventInfo}>
+                    <Clock color={theme.colors.subtext} size={14} />
+                    <Text style={styles.eventInfoText}>{event.time}</Text>
+                  </View>
+                  <View style={styles.eventInfo}>
+                    <MapPin color={theme.colors.subtext} size={14} />
+                    <Text style={styles.eventInfoText}>{event.location}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.eventFooter}>
+                  <View style={styles.eventParticipants}>
+                    <Users color={theme.colors.subtext} size={16} />
+                    <Text style={styles.eventInfoText}>
+                      {event.participants} / {event.maxParticipants}
                     </Text>
                   </View>
-                  {event.registered && (
-                    <View style={styles.registeredBadge}>
-                      <Text style={styles.registeredText}>Зарегистрирован</Text>
-                    </View>
-                  )}
+                  <View style={styles.eventPoints}>
+                    <Star color={theme.colors.primary} size={16} />
+                    <Text style={styles.eventPointsText}>{event.points} баллов</Text>
+                  </View>
                 </View>
-                <View style={styles.pointsContainer}>
-                  <Star color="#f59e0b" size={16} fill="#f59e0b" />
-                  <Text style={styles.pointsText}>+{event.points}</Text>
-                </View>
-              </View>
-              
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventDescription} numberOfLines={2}>
-                {event.description}
-              </Text>
-              
-              <View style={styles.eventDetails}>
-                <View style={styles.eventDetail}>
-                  <CalendarIcon color="#666" size={16} />
-                  <Text style={styles.eventDetailText}>
-                    {formatDate(event.date)} в {event.time}
-                  </Text>
-                </View>
-                <View style={styles.eventDetail}>
-                  <MapPin color="#666" size={16} />
-                  <Text style={styles.eventDetailText} numberOfLines={1}>
-                    {event.location}
-                  </Text>
-                </View>
-                <View style={styles.eventDetail}>
-                  <Users color="#666" size={16} />
-                  <Text style={styles.eventDetailText}>
-                    {event.participants}/{event.maxParticipants} участников
-                  </Text>
-                </View>
-              </View>
-              
-              <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        width: `${(event.participants / event.maxParticipants) * 100}%`,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.progressText}>
-                  {Math.round((event.participants / event.maxParticipants) * 100)}% заполнено
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+
+                {event.registered && (
+                  <View style={styles.registeredBadge}>
+                    <Text style={styles.registeredBadgeText}>Вы записаны</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.noEventsContainer}>
+              <Text style={styles.noEventsText}>Нет событий по выбранному фильтру.</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
       {/* Event Details Modal */}
       <Modal
-        visible={showEventModal}
         animationType="slide"
-        presentationStyle="pageSheet"
+        transparent={true}
+        visible={showEventModal}
+        onRequestClose={() => setShowEventModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          {selectedEvent && (
-            <>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Детали события</Text>
-                <TouchableOpacity onPress={() => setShowEventModal(false)}>
-                  <X color="#333" size={24} />
-                </TouchableOpacity>
-              </View>
-              
-              <ScrollView style={styles.modalContent}>
-                <View style={styles.modalEventHeader}>
-                  <View
-                    style={[
-                      styles.modalEventTypeBadge,
-                      { backgroundColor: getEventTypeColor(selectedEvent.type) },
-                    ]}
-                  >
-                    <Text style={styles.modalEventTypeText}>
-                      {getEventTypeName(selectedEvent.type)}
-                    </Text>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            {selectedEvent && (
+              <>
+                <View style={styles.modalHeader}>
+                  <View style={[styles.modalEventType, { backgroundColor: getEventTypeColor(selectedEvent.type) }]}>
+                    <Text style={styles.modalEventType_text}>{getEventTypeName(selectedEvent.type)}</Text>
                   </View>
-                  <View style={styles.modalPointsContainer}>
-                    <Star color="#f59e0b" size={20} fill="#f59e0b" />
-                    <Text style={styles.modalPointsText}>+{selectedEvent.points} баллов</Text>
-                  </View>
-                </View>
-                
-                <Text style={styles.modalEventTitle}>{selectedEvent.title}</Text>
-                <Text style={styles.modalEventDescription}>{selectedEvent.description}</Text>
-                
-                <View style={styles.modalEventDetails}>
-                  <View style={styles.modalEventDetail}>
-                    <CalendarIcon color="#667eea" size={20} />
-                    <Text style={styles.modalEventDetailText}>
-                      {formatDate(selectedEvent.date)} в {selectedEvent.time}
-                    </Text>
-                  </View>
-                  <View style={styles.modalEventDetail}>
-                    <MapPin color="#667eea" size={20} />
-                    <Text style={styles.modalEventDetailText}>{selectedEvent.location}</Text>
-                  </View>
-                  <View style={styles.modalEventDetail}>
-                    <Users color="#667eea" size={20} />
-                    <Text style={styles.modalEventDetailText}>
-                      {selectedEvent.participants}/{selectedEvent.maxParticipants} участников
-                    </Text>
-                  </View>
-                </View>
-                
-                <View style={styles.modalProgressContainer}>
-                  <Text style={styles.modalProgressTitle}>Заполненность</Text>
-                  <View style={styles.modalProgressBar}>
-                    <View
-                      style={[
-                        styles.modalProgressFill,
-                        {
-                          width: `${(selectedEvent.participants / selectedEvent.maxParticipants) * 100}%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.modalProgressText}>
-                    {Math.round((selectedEvent.participants / selectedEvent.maxParticipants) * 100)}% заполнено
-                  </Text>
-                </View>
-              </ScrollView>
-              
-              <View style={styles.modalActions}>
-                {selectedEvent.registered ? (
-                  <View style={styles.registeredButton}>
-                    <Text style={styles.registeredButtonText}>Вы зарегистрированы</Text>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.registerButton}
-                    onPress={() => handleRegister(selectedEvent.id)}
-                  >
-                    <LinearGradient
-                      colors={['#667eea', '#764ba2']}
-                      style={styles.registerButtonGradient}
-                    >
-                      <Plus color="#ffffff" size={20} />
-                      <Text style={styles.registerButtonText}>Зарегистрироваться</Text>
-                    </LinearGradient>
+                  <TouchableOpacity style={styles.closeButton} onPress={() => setShowEventModal(false)}>
+                    <X color={theme.colors.text} size={24} />
                   </TouchableOpacity>
-                )}
-              </View>
-            </>
-          )}
-        </SafeAreaView>
+                </View>
+
+                <Text style={styles.modalTitle}>{selectedEvent.title}</Text>
+
+                <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.modalSectionTitle}>Описание</Text>
+                  <Text style={styles.modalDescription}>{selectedEvent.description}</Text>
+
+                  <View style={styles.modalInfoGrid}>
+                    <View style={styles.modalInfoItem}>
+                      <CalendarIcon color={theme.colors.subtext} size={20} />
+                      <Text style={styles.modalInfoText}>{formatDate(selectedEvent.date)}</Text>
+                    </View>
+                    <View style={styles.modalInfoItem}>
+                      <Clock color={theme.colors.subtext} size={20} />
+                      <Text style={styles.modalInfoText}>{selectedEvent.time}</Text>
+                    </View>
+                    <View style={styles.modalInfoItem}>
+                      <MapPin color={theme.colors.subtext} size={20} />
+                      <Text style={styles.modalInfoText}>{selectedEvent.location}</Text>
+                    </View>
+                    <View style={styles.modalInfoItem}>
+                      <Users color={theme.colors.subtext} size={20} />
+                      <Text style={styles.modalInfoText}>
+                        {selectedEvent.participants} / {selectedEvent.maxParticipants} участников
+                      </Text>
+                    </View>
+                    <View style={styles.modalInfoItem}>
+                      <Star color={theme.colors.subtext} size={20} />
+                      <Text style={styles.modalInfoText}>{selectedEvent.points} баллов за участие</Text>
+                    </View>
+                  </View>
+                </ScrollView>
+
+                <View style={styles.modalFooter}>
+                  {selectedEvent.registered ? (
+                    <TouchableOpacity style={styles.alreadyRegisteredButton} disabled>
+                      <Text style={styles.alreadyRegisteredButtonText}>Вы уже записаны</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.registerButton}
+                      onPress={() => handleRegister(selectedEvent.id)}
+                    >
+                      <Text style={styles.registerButtonText}>Записаться на событие</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            )}
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingTop: 40,
+    paddingBottom: 60,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
   headerTitle: {
     fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
-    marginBottom: 5,
+    color: theme.colors.lightText,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.9,
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    marginTop: -15,
+    paddingHorizontal: 15,
+    marginTop: -40,
   },
   statCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 15,
+    backgroundColor: theme.colors.card,
+    borderRadius: 20,
     padding: 15,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    justifyContent: 'center',
+    width: (width - 60) / 3,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    minWidth: 80,
+    shadowRadius: 10,
+    elevation: 5,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: 'Inter-Bold',
-    color: '#333',
+    color: theme.colors.text,
     marginTop: 8,
   },
   statLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#666',
-    marginTop: 2,
+    fontSize: 13,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.subtext,
+    marginTop: 4,
     textAlign: 'center',
   },
   filterContainer: {
-    paddingVertical: 15,
-    paddingLeft: 20,
+    paddingHorizontal: 15,
+    marginTop: 25,
+    marginBottom: 10,
   },
   filterButton: {
-    backgroundColor: '#f0f0f0',
+    paddingVertical: 10,
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    backgroundColor: theme.colors.inputBackground,
     borderRadius: 20,
     marginRight: 10,
   },
   filterButtonActive: {
-    backgroundColor: '#667eea',
+    backgroundColor: theme.colors.primary,
   },
   filterButtonText: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#666',
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
   },
   filterButtonTextActive: {
-    color: '#ffffff',
+    color: theme.colors.lightText,
   },
   eventsSection: {
     paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 20,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: 'Inter-Bold',
-    color: '#333',
-    marginBottom: 15,
+    color: theme.colors.text,
+    marginBottom: 20,
   },
   eventCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 15,
+    backgroundColor: theme.colors.card,
+    borderRadius: 20,
     padding: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
+    marginBottom: 20,
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  eventHeader: {
+  eventCardRegistered: {
+    borderColor: theme.colors.success,
+  },
+  eventCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  eventTypeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  eventType: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
   },
-  eventTypeBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  eventTypeText: {
+  eventType_text: {
     fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.lightText,
+  },
+  eventDate: {
+    fontSize: 13,
     fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
-  },
-  registeredBadge: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  registeredText: {
-    fontSize: 10,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
-  },
-  pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pointsText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#f59e0b',
-    marginLeft: 4,
+    color: theme.colors.subtext,
   },
   eventTitle: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: '#333',
-    marginBottom: 8,
+    color: theme.colors.text,
+    marginBottom: 12,
+    lineHeight: 24,
   },
-  eventDescription: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#666',
-    lineHeight: 20,
+  eventInfoContainer: {
     marginBottom: 15,
+    gap: 8,
   },
-  eventDetails: {
-    marginBottom: 15,
-  },
-  eventDetail: {
+  eventInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 8,
   },
-  eventDetailText: {
+  eventInfoText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#666',
-    marginLeft: 8,
-    flex: 1,
+    color: theme.colors.subtext,
   },
-  progressContainer: {
-    marginTop: 10,
+  eventFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: 5,
+  eventParticipants: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#667eea',
-    borderRadius: 3,
+  eventPoints: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  progressText: {
+  eventPointsText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.primary,
+  },
+  registeredBadge: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: theme.colors.success,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  registeredBadgeText: {
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: '#666',
-    textAlign: 'right',
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.lightText,
   },
-  modalContainer: {
+  noEventsContainer: {
+    height: 150,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.card,
+    borderRadius: 20,
+  },
+  noEventsText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.subtext,
+  },
+  modalBackdrop: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.card,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+    height: '85%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    marginBottom: 20,
+    paddingHorizontal: 5,
+  },
+  modalEventType: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
+  },
+  modalEventType_text: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.lightText,
+  },
+  closeButton: {
+    padding: 8,
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 20,
   },
   modalTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#333',
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  modalEventHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalEventTypeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  modalEventTypeText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
-  },
-  modalPointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  modalPointsText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#f59e0b',
-    marginLeft: 6,
-  },
-  modalEventTitle: {
     fontSize: 24,
     fontFamily: 'Inter-Bold',
-    color: '#333',
-    marginBottom: 15,
+    color: theme.colors.text,
+    marginBottom: 20,
+    paddingHorizontal: 5,
+    lineHeight: 32,
   },
-  modalEventDescription: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: '#666',
-    lineHeight: 24,
-    marginBottom: 25,
-  },
-  modalEventDetails: {
-    marginBottom: 25,
-  },
-  modalEventDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    paddingVertical: 5,
-  },
-  modalEventDetailText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: '#333',
-    marginLeft: 12,
+  modalScrollView: {
     flex: 1,
   },
-  modalProgressContainer: {
-    marginBottom: 20,
-  },
-  modalProgressTitle: {
+  modalSectionTitle: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#333',
+    color: theme.colors.subtext,
     marginBottom: 10,
+    paddingHorizontal: 5,
   },
-  modalProgressBar: {
-    height: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 8,
+  modalDescription: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.text,
+    lineHeight: 24,
+    marginBottom: 25,
+    paddingHorizontal: 5,
   },
-  modalProgressFill: {
-    height: '100%',
-    backgroundColor: '#667eea',
-    borderRadius: 4,
+  modalInfoGrid: {
+    gap: 15,
+    paddingHorizontal: 5,
   },
-  modalProgressText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#666',
-  },
-  modalActions: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  registerButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  registerButtonGradient: {
+  modalInfoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
+    gap: 12,
   },
-  registerButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
-    marginLeft: 8,
+  modalInfoText: {
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.text,
+    flex: 1,
   },
-  registeredButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 12,
-    paddingVertical: 15,
+  modalFooter: {
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  registerButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 18,
+    borderRadius: 25,
     alignItems: 'center',
   },
-  registeredButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+  registerButtonText: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.lightText,
+  },
+  alreadyRegisteredButton: {
+    backgroundColor: theme.colors.border,
+    paddingVertical: 18,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  alreadyRegisteredButtonText: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.subtext,
   },
 });

@@ -15,10 +15,14 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Shield, Mail, Lock, User, Eye, EyeOff } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -87,7 +91,7 @@ export default function AuthScreen() {
 
   return (
     <LinearGradient
-      colors={['#667eea', '#764ba2']}
+      colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
       style={styles.container}
     >
       <KeyboardAvoidingView
@@ -100,7 +104,7 @@ export default function AuthScreen() {
         >
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Shield color="#ffffff" size={60} strokeWidth={2} />
+              <Shield color={theme.colors.lightText} size={60} strokeWidth={2} />
             </View>
             <Text style={styles.appName}>VolunteerShield</Text>
             <Text style={styles.tagline}>
@@ -120,11 +124,11 @@ export default function AuthScreen() {
             <View style={styles.form}>
               {!isLogin && (
                 <View style={styles.inputContainer}>
-                  <User color="#667eea" size={20} style={styles.inputIcon} />
+                  <User color={theme.colors.primary} size={20} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Полное имя"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={theme.colors.subtext}
                     value={name}
                     onChangeText={setName}
                     autoCapitalize="words"
@@ -133,11 +137,11 @@ export default function AuthScreen() {
               )}
 
               <View style={styles.inputContainer}>
-                <Mail color="#667eea" size={20} style={styles.inputIcon} />
+                <Mail color={theme.colors.primary} size={20} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Email адрес"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.colors.subtext}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -146,11 +150,11 @@ export default function AuthScreen() {
               </View>
 
               <View style={styles.inputContainer}>
-                <Lock color="#667eea" size={20} style={styles.inputIcon} />
+                <Lock color={theme.colors.primary} size={20} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
                   placeholder="Пароль"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.colors.subtext}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -160,20 +164,20 @@ export default function AuthScreen() {
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff color="#667eea" size={20} />
+                    <EyeOff color={theme.colors.primary} size={20} />
                   ) : (
-                    <Eye color="#667eea" size={20} />
+                    <Eye color={theme.colors.primary} size={20} />
                   )}
                 </TouchableOpacity>
               </View>
 
               {!isLogin && (
                 <View style={styles.inputContainer}>
-                  <Lock color="#667eea" size={20} style={styles.inputIcon} />
+                  <Lock color={theme.colors.primary} size={20} style={styles.inputIcon} />
                   <TextInput
                     style={[styles.input, styles.passwordInput]}
                     placeholder="Подтвердите пароль"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={theme.colors.subtext}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={!showConfirmPassword}
@@ -183,9 +187,9 @@ export default function AuthScreen() {
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff color="#667eea" size={20} />
+                      <EyeOff color={theme.colors.primary} size={20} />
                     ) : (
-                      <Eye color="#667eea" size={20} />
+                      <Eye color={theme.colors.primary} size={20} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -196,13 +200,22 @@ export default function AuthScreen() {
                 onPress={handleAuth}
               >
                 <LinearGradient
-                  colors={['#667eea', '#764ba2']}
+                  colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
                   style={styles.authButtonGradient}
                 >
                   <Text style={styles.authButtonText}>
                     {isLogin ? 'Войти' : 'Зарегистрироваться'}
                   </Text>
                 </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.adminButton}
+                onPress={() => router.push('/admin')}
+              >
+                <Text style={styles.adminButtonText}>
+                  (Dev) Go to Admin Panel
+                </Text>
               </TouchableOpacity>
 
               {isLogin && (
@@ -231,7 +244,7 @@ export default function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -260,13 +273,13 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     marginBottom: 8,
   },
   tagline: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.9,
     textAlign: 'center',
   },
@@ -274,7 +287,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   form: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.card,
     borderRadius: 20,
     padding: 30,
     shadowColor: '#000',
@@ -286,12 +299,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.inputBackground,
     borderRadius: 12,
     marginBottom: 20,
     paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: theme.colors.border,
   },
   inputIcon: {
     marginRight: 12,
@@ -301,7 +314,7 @@ const styles = StyleSheet.create({
     height: 50,
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#333',
+    color: theme.colors.text,
   },
   passwordInput: {
     paddingRight: 40,
@@ -323,16 +336,31 @@ const styles = StyleSheet.create({
   authButtonText: {
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
+  },
+  adminButton: {
+    borderColor: theme.colors.lightText,
+    borderWidth: 1,
+    padding: 15,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  adminButtonText: {
+    color: theme.colors.lightText,
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    opacity: 0.8,
   },
   forgotPassword: {
-    alignItems: 'center',
-    marginTop: 20,
+    alignSelf: 'center',
+    marginTop: 15,
   },
   forgotPasswordText: {
+    color: theme.colors.lightText,
+    fontFamily: 'Inter-SemiBold',
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#667eea',
+    opacity: 0.8,
   },
   switchContainer: {
     flexDirection: 'row',
@@ -343,13 +371,13 @@ const styles = StyleSheet.create({
   switchText: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     opacity: 0.9,
   },
   switchButton: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#ffffff',
+    color: theme.colors.lightText,
     marginLeft: 5,
     textDecorationLine: 'underline',
   },
