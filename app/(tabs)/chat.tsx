@@ -14,7 +14,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Send, Bot, User, CircleHelp as HelpCircle, FileText, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 const { width } = Dimensions.get('window');
 
@@ -36,7 +35,6 @@ interface QuickAction {
 export default function ChatScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const tabBarHeight = useBottomTabBarHeight();
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -179,7 +177,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingBottom: Platform.OS === 'android' ? 16 : 0 }} edges={['bottom', 'left', 'right', 'top']}>
       {/* Header */}
       <LinearGradient
         colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
@@ -220,7 +218,7 @@ export default function ChatScreen() {
       <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={tabBarHeight}
+        keyboardVerticalOffset={0}
       >
         {/* Messages */}
         <ScrollView
