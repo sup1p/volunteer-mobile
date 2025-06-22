@@ -59,6 +59,8 @@ export default function HomeScreen() {
       return;
     }
 
+    console.log('Вызов бэкенда: Лайк инициативы', { initiativeId });
+
     setInitiatives(currentInitiatives =>
       currentInitiatives.map(initiative =>
         initiative.id === initiativeId

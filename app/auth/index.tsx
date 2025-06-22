@@ -85,6 +85,11 @@ export default function AuthScreen() {
       Alert.alert('Ошибка регистрации', 'Пароли не совпадают.');
       return;
     }
+    if (isLogin) {
+      console.log('Вызов бэкенда: Вход', { email, password });
+    } else {
+      console.log('Вызов бэкенда: Регистрация', { name, email, password });
+    }
     // Здесь будет логика авторизации/регистрации
     router.replace('/(tabs)');
   };

@@ -98,6 +98,8 @@ export default function ChatScreen() {
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
 
+    console.log('Вызов бэкенда: Отправка сообщения в чат', { message: text.trim() });
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text: text.trim(),
@@ -152,6 +154,7 @@ export default function ChatScreen() {
   };
 
   const handleQuickAction = (action: QuickAction) => {
+    console.log('Вызов бэкенда: Быстрое действие в чате', { actionTitle: action.title });
     const userMessage: Message = {
       id: Date.now().toString(),
       text: action.title,

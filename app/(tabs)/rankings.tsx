@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -51,6 +51,7 @@ export default function RankingsScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState('overall');
   const [selectedRegion, setSelectedRegion] = useState('all');
+  const [rankedUsers, setRankedUsers] = useState<RankingUser[]>([]);
 
   const categories: LeaderboardCategory[] = [
     {
@@ -79,7 +80,7 @@ export default function RankingsScreen() {
     },
   ];
 
-  const [topUsers] = useState<RankingUser[]>([
+  const [allUsers] = useState<RankingUser[]>([
     {
       id: '1',
       name: 'Мария Иванова',
@@ -192,7 +193,36 @@ export default function RankingsScreen() {
     },
   ]);
 
-  const currentUser = topUsers.find(user => user.id === '11');
+  const currentUser = allUsers.find(user => user.id === '11');
+
+  useEffect(() => {
+    console.log('Вызов бэкенда: Запрос рейтинга', { category: selectedCategory, region: selectedRegion });
+
+    let usersToRank = [...allUsers];
+
+    // Фильтрация по региону (если нужно)
+    // if (selectedRegion !== 'all') {
+    //   usersToRank = usersToRank.filter(u => u.region === selectedRegion);
+    // }
+
+    // Сортировка по категории
+    switch (selectedCategory) {
+      case 'missions':
+        usersToRank.sort((a, b) => b.completedMissions - a.completedMissions);
+        break;
+      case 'events':
+        usersToRank.sort((a, b) => b.eventsAttended - a.eventsAttended);
+        break;
+      case 'monthly':
+      case 'overall':
+      default:
+        usersToRank.sort((a, b) => b.points - a.points);
+        break;
+    }
+
+    const newRankedUsers = usersToRank.map((user, index) => ({ ...user, rank: index + 1 }));
+    setRankedUsers(newRankedUsers);
+  }, [selectedCategory, selectedRegion]);
 
   const getLevelColor = (level: number) => {
     if (level >= 8) return theme.colors.primary;
@@ -305,7 +335,7 @@ export default function RankingsScreen() {
                 <Medal color={theme.colors.subtext} size={24} />
               </View>
               <Text style={styles.podiumName}>Дмитрий С.</Text>
-              <Text style={styles.podiumPoints}>{topUsers[1].points}</Text>
+              <Text style={styles.podiumPoints}>{rankedUsers[1].points}</Text>
             </View>
 
             {/* First Place */}
@@ -317,7 +347,7 @@ export default function RankingsScreen() {
                 <Crown color={theme.colors.warning} size={28} />
               </View>
               <Text style={styles.podiumName}>Мария И.</Text>
-              <Text style={styles.podiumPoints}>{topUsers[0].points}</Text>
+              <Text style={styles.podiumPoints}>{rankedUsers[0].points}</Text>
             </View>
 
             {/* Third Place */}
@@ -329,7 +359,7 @@ export default function RankingsScreen() {
                 <Award color={theme.colors.danger} size={24} />
               </View>
               <Text style={styles.podiumName}>Елена К.</Text>
-              <Text style={styles.podiumPoints}>{topUsers[2].points}</Text>
+              <Text style={styles.podiumPoints}>{rankedUsers[2].points}</Text>
             </View>
           </View>
         </View>
@@ -339,7 +369,7 @@ export default function RankingsScreen() {
           <Text style={styles.sectionTitle}>Полный рейтинг</Text>
 
           <View style={styles.rankingsContainer}>
-            {topUsers.map((user, index) => (
+            {rankedUsers.map((user, index) => (
               <View
                 key={user.id}
                 style={[
@@ -353,7 +383,7 @@ export default function RankingsScreen() {
                     index < 3 && styles.topThreePosition,
                   ]}>
                     {index < 3 ? (
-                      getRankIcon(user.rank)
+                      <View style={styles.rankIconContainer}>{getRankIcon(user.rank)}</View>
                     ) : (
                       <Text style={styles.rankingPositionText}>
                         {user.rank}
@@ -775,5 +805,13 @@ const getStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.subtext,
     marginTop: 2,
     textAlign: 'center',
+  },
+  rankIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

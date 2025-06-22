@@ -45,6 +45,7 @@ export default function ProfileScreen() {
   const userCertificates = mockUserCertificates.filter(cert => cert.userId === CURRENT_USER_ID);
 
   const handleLogout = () => {
+    console.log('Вызов бэкенда: Выход из системы');
     router.replace('/auth');
   };
 

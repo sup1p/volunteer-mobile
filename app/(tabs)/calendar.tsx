@@ -92,6 +92,7 @@ export default function CalendarScreen() {
     // Проверяем, не зарегистрирован ли пользователь уже
     const isRegistered = registrations.some(reg => reg.eventId === eventId && reg.userId === CURRENT_USER_ID);
     if (!isRegistered) {
+      console.log('Вызов бэкенда: Регистрация на событие', { userId: CURRENT_USER_ID, eventId });
       const newRegistration: UserEventRegistration = {
         registrationId: uuidv4(),
         userId: CURRENT_USER_ID,
@@ -99,7 +100,6 @@ export default function CalendarScreen() {
         status: 'registered',
       };
       setRegistrations(prev => [...prev, newRegistration]);
-      console.log(`Пользователь ${CURRENT_USER_ID} зарегистрировался на событие ${eventId}`);
     }
     setShowEventModal(false);
   };
