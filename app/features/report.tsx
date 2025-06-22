@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Switch
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function ReportScreen() {
     const { theme } = useTheme();
@@ -13,8 +14,20 @@ export default function ReportScreen() {
     const [date, setDate] = useState(new Date().toISOString().substring(0, 10));
     const [isAnonymous, setIsAnonymous] = useState(false);
 
+    const [open, setOpen] = useState(false);
+    const [category, setCategory] = useState(null);
+    const [items, setItems] = useState([
+        { label: 'Нарушение правил', value: 'Нарушение правил' },
+        { label: 'Техническая проблема', value: 'Техническая проблема' },
+        { label: 'Предложение по улучшению', value: 'Предложение по улучшению' },
+        { label: 'Жалоба на пользователя', value: 'Жалоба на пользователя' },
+        { label: 'Проблема с контентом', value: 'Проблема с контентом' },
+        { label: 'Другое', value: 'Другое' }
+    ]);
+
+
     const handleSubmit = () => {
-        const reportData = { title, description, date, isAnonymous };
+        const reportData = { title, description, category, date, isAnonymous };
         console.log('Submitting report:', reportData);
         // API call to submit the report would go here
     };
@@ -41,6 +54,26 @@ export default function ReportScreen() {
                         onChangeText={setDescription}
                         multiline
                     />
+
+                    <Text style={styles.label}>Категория</Text>
+                    <DropDownPicker
+                        open={open}
+                        value={category}
+                        items={items}
+                        setOpen={setOpen}
+                        setValue={setCategory}
+                        setItems={setItems}
+                        placeholder="Выберите категорию"
+                        style={styles.dropdown}
+                        containerStyle={styles.dropdownContainer}
+                        dropDownContainerStyle={styles.dropdownBox}
+                        placeholderStyle={styles.placeholder}
+                        listItemLabelStyle={styles.dropdownListItem}
+                        selectedItemLabelStyle={styles.dropdownSelectedItem}
+                        zIndex={3000}
+                        zIndexInverse={1000}
+                    />
+
 
                     <Text style={styles.label}>Дата происшествия</Text>
                     <TextInput
@@ -109,6 +142,33 @@ const getStyles = (theme: any) => StyleSheet.create({
     textArea: {
         height: 120,
         textAlignVertical: 'top',
+    },
+    dropdown: {
+        backgroundColor: theme.colors.inputBackground,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        marginBottom: 20,
+    },
+    dropdownContainer: {
+        height: 58,
+        marginBottom: 20,
+    },
+    dropdownBox: {
+        backgroundColor: theme.colors.inputBackground,
+        borderColor: theme.colors.border,
+    },
+    placeholder: {
+        color: theme.colors.subtext,
+        fontFamily: 'Inter-Regular',
+    },
+    dropdownListItem: {
+        fontFamily: 'Inter-Regular',
+        color: theme.colors.text,
+    },
+    dropdownSelectedItem: {
+        fontFamily: 'Inter-SemiBold',
+        color: theme.colors.primary,
     },
     attachmentContainer: {
         flexDirection: 'row',
