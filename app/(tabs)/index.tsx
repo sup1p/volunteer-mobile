@@ -220,7 +220,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Ближайшие мероприятия</Text>
-            <TouchableOpacity onPress={() => router.push('/features/events' as any)}>
+            <TouchableOpacity onPress={() => router.push('/calendar' as any)}>
               <Text style={styles.seeAll}>Все</Text>
             </TouchableOpacity>
           </View>
