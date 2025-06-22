@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -100,7 +101,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingBottom: Platform.OS === 'android' ? 16 : 0 }} edges={['bottom', 'left', 'right', 'top']}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
@@ -304,6 +305,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -329,7 +331,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.lightText,
   },
   levelBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: theme.colors.primaryMuted,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
@@ -372,7 +374,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   progressBar: {
     height: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: theme.colors.primaryMuted,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -408,7 +410,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     borderRadius: 12,
     padding: 15,
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
@@ -469,7 +471,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     borderRadius: 15,
     padding: 15,
     marginRight: 15,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
@@ -531,7 +533,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     padding: 20,
     marginBottom: 15,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,

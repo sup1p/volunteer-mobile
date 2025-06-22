@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Modal,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -134,7 +135,7 @@ export default function CalendarScreen() {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingBottom: Platform.OS === 'android' ? 16 : 0 }} edges={['bottom', 'left', 'right', 'top']}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
@@ -218,7 +219,7 @@ export default function CalendarScreen() {
                 <TouchableOpacity key={event.id} style={styles.eventCard} onPress={() => handleEventPress(event)}>
                   <View style={styles.eventCardHeader}>
                     <View style={[styles.eventTypeBadge, { backgroundColor: getEventTypeColor(event.category) }]}>
-                      <Tag size={14} color="#fff" />
+                      <Tag size={14} color={theme.colors.lightText} />
                       <Text style={styles.eventTypeBadgeText}>{getEventTypeName(event.category)}</Text>
                     </View>
                     <View style={styles.eventReward}>
@@ -282,6 +283,7 @@ export default function CalendarScreen() {
 
               <ScrollView>
                 <View style={[styles.modalEventTypeBadge, { backgroundColor: getEventTypeColor(selectedEvent.category) }]}>
+                  <Tag size={16} color={theme.colors.lightText} />
                   <Text style={styles.modalEventTypeBadgeText}>{getEventTypeName(selectedEvent.category)}</Text>
                 </View>
 
@@ -338,6 +340,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -355,13 +358,13 @@ const getStyles = (theme: any) => StyleSheet.create({
   headerTitle: {
     fontSize: 26,
     fontFamily: 'Inter-Bold',
-    color: '#fff',
+    color: theme.colors.lightText,
     textAlign: 'center',
   },
   headerSubtitle: {
     fontFamily: 'Inter-Regular',
     fontSize: 16,
-    color: '#fff',
+    color: theme.colors.lightText,
     textAlign: 'center',
     opacity: 0.9,
     marginTop: 5,
@@ -420,7 +423,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
   },
   filterButtonTextActive: {
-    color: '#fff',
+    color: theme.colors.lightText,
   },
   eventsSection: {
     paddingHorizontal: 20,
@@ -471,7 +474,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   eventTypeBadgeText: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 12,
-    color: '#fff',
+    color: theme.colors.lightText,
     marginLeft: 5,
   },
   eventReward: {
@@ -553,7 +556,8 @@ const getStyles = (theme: any) => StyleSheet.create({
   modalEventTypeBadgeText: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 14,
-    color: '#fff',
+    color: theme.colors.lightText,
+    marginLeft: 8,
   },
   modalTitle: {
     fontFamily: 'Inter-Bold',

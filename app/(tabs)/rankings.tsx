@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -194,10 +195,10 @@ export default function RankingsScreen() {
   const currentUser = topUsers.find(user => user.id === '11');
 
   const getLevelColor = (level: number) => {
-    if (level >= 8) return '#8b5cf6';
-    if (level >= 6) return '#f59e0b';
-    if (level >= 4) return '#10b981';
-    return '#667eea';
+    if (level >= 8) return theme.colors.primary;
+    if (level >= 6) return theme.colors.warning;
+    if (level >= 4) return theme.colors.success;
+    return theme.colors.subtext;
   };
 
   const getLevelTitle = (level: number) => {
@@ -210,7 +211,7 @@ export default function RankingsScreen() {
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown color={theme.colors.warning} size={20} />;
     if (rank === 2) return <Medal color={theme.colors.subtext} size={20} />;
-    if (rank === 3) return <Award color="#cd7c2f" size={20} />;
+    if (rank === 3) return <Award color={theme.colors.danger} size={20} />;
     return null;
   };
 
@@ -219,7 +220,7 @@ export default function RankingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingBottom: Platform.OS === 'android' ? 16 : 0 }} edges={['bottom', 'left', 'right', 'top']}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
@@ -236,7 +237,7 @@ export default function RankingsScreen() {
         {currentUser && (
           <View style={styles.currentUserContainer}>
             <LinearGradient
-              colors={[theme.colors.success, '#059669']}
+              colors={[theme.colors.success, theme.colors.success]}
               style={styles.currentUserCard}
             >
               <View style={styles.currentUserInfo}>
@@ -325,7 +326,7 @@ export default function RankingsScreen() {
                 <Text style={styles.podiumInitials}>ЕК</Text>
               </View>
               <View style={styles.podiumRank}>
-                <Award color="#cd7c2f" size={24} />
+                <Award color={theme.colors.danger} size={24} />
               </View>
               <Text style={styles.podiumName}>Елена К.</Text>
               <Text style={styles.podiumPoints}>{topUsers[2].points}</Text>
@@ -440,6 +441,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: theme.colors.background
   },
   header: {
     paddingHorizontal: 20,

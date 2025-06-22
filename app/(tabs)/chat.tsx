@@ -177,7 +177,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingBottom: Platform.OS === 'android' ? 16 : 0 }} edges={['bottom', 'left', 'right', 'top']}>
       {/* Header */}
       <LinearGradient
         colors={[theme.colors.primaryGradientStart, theme.colors.primaryGradientEnd]}
@@ -262,7 +262,7 @@ export default function ChatScreen() {
 
               {!message.isBot && (
                 <View style={styles.messageAvatar}>
-                  <User color="#ffffff" size={16} />
+                  <User color={theme.colors.lightText} size={16} />
                 </View>
               )}
             </View>
@@ -329,7 +329,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: theme.colors.primaryMuted,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -434,7 +434,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.subtext,
   },
   userTimestamp: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: theme.colors.lightTextMuted,
   },
   inputContainer: {
     flexDirection: 'row',
