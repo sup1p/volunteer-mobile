@@ -160,7 +160,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>Редактировать профиль</Text>
                 <ChevronRight color={theme.colors.subtext} size={22} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/features/notifications' as any)}>
                 <Bell color={theme.colors.subtext} size={22} />
                 <Text style={styles.menuItemText}>Уведомления</Text>
                 <ChevronRight color={theme.colors.subtext} size={22} />
@@ -170,17 +170,12 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>Тема: {isDarkMode ? 'Темная' : 'Светлая'}</Text>
                 <ChevronRight color={theme.colors.subtext} size={22} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem}>
-                <Shield color={theme.colors.subtext} size={22} />
-                <Text style={styles.menuItemText}>Безопасность</Text>
-                <ChevronRight color={theme.colors.subtext} size={22} />
-              </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.section}>
             <View style={styles.menuSection}>
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/features/help-support' as any)}>
                 <HelpCircle color={theme.colors.subtext} size={22} />
                 <Text style={styles.menuItemText}>Помощь и поддержка</Text>
                 <ChevronRight color={theme.colors.subtext} size={22} />

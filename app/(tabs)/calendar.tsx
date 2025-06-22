@@ -242,8 +242,6 @@ export default function CalendarScreen() {
                   </View>
                   <View style={styles.eventFooter}>
                     <View style={styles.participants}>
-                      <Users size={14} color={theme.colors.subtext} />
-                      <Text style={styles.metaText}>{event.participants} участников</Text>
                     </View>
                     <ChevronRight size={20} color={theme.colors.primary} />
                   </View>
@@ -302,8 +300,6 @@ export default function CalendarScreen() {
 
                 <View style={styles.modalMetaRow}>
                   <View style={styles.modalMetaItem}>
-                    <Users size={16} color={theme.colors.subtext} />
-                    <Text style={styles.modalMetaText}>{selectedEvent.participants} участников</Text>
                   </View>
                   <View style={styles.modalMetaItem}>
                     <Award size={16} color={theme.colors.warning} />

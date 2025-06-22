@@ -90,8 +90,6 @@ const AllNewsScreen = () => {
                                     <View style={styles.newsInfo}>
                                         <Eye size={14} color={theme.colors.text} />
                                         <Text style={styles.newsInfoText}>{item.views}</Text>
-                                        <MessageSquare size={14} color={theme.colors.text} style={{ marginLeft: 8 }} />
-                                        <Text style={styles.newsInfoText}>{item.comments}</Text>
                                     </View>
                                 </View>
                             </View>

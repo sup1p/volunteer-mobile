@@ -140,8 +140,6 @@ const NewsDetailScreen = () => {
                         <View style={styles.statsContainer}>
                             <Eye size={16} color={theme.colors.subtext} />
                             <Text style={styles.statsText}>{newsArticle.views}</Text>
-                            <MessageSquare size={16} color={theme.colors.subtext} style={{ marginLeft: 16 }} />
-                            <Text style={styles.statsText}>{newsArticle.comments}</Text>
                         </View>
                         <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
                             <Share2 size={22} color={theme.colors.primary} />

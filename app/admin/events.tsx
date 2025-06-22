@@ -88,8 +88,6 @@ export default function AdminEventsScreen() {
                     <Text style={styles.cardSubtitle}>{item.location}</Text>
                 </View>
                 <View style={styles.cardRow}>
-                    <Users color={theme.colors.subtext} size={14} />
-                    <Text style={styles.cardSubtitle}>{item.attendees} участников</Text>
                 </View>
             </View>
             <View style={styles.dateContainer}>

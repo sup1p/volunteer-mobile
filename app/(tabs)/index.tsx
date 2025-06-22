@@ -208,8 +208,6 @@ export default function HomeScreen() {
                   <View style={styles.newsStats}>
                     <Eye size={16} color={theme.colors.subtext} />
                     <Text style={styles.newsStatsText}>{item.views}</Text>
-                    <MessageSquare size={16} color={theme.colors.subtext} style={{ marginLeft: 8 }} />
-                    <Text style={styles.newsStatsText}>{item.comments}</Text>
                   </View>
                 </View>
               </View>
